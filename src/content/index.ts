@@ -1,4 +1,9 @@
-import type { InterceptorPayload, MediaItem } from '@/shared/types';
+import type {
+  BackgroundMessage,
+  DownloadResponse,
+  InterceptorPayload,
+  MediaItem,
+} from '@/shared/types';
 import { providerForHost } from '@/providers/registry';
 import { extractTikTokFromRehydration } from '@/providers/tiktok';
 import { createPanel } from './panel';
@@ -11,8 +16,20 @@ const items = new Map<string, MediaItem>();
 const panel = createPanel({
   mode: isYouTube ? 'youtube' : 'download',
   onDownload: (url, filename) => {
-    void chrome.runtime.sendMessage({ type: 'download', url, filename });
+    panel.setStatus(url, 'downloading');
+    chrome.runtime
+      .sendMessage({ type: 'download', url, filename })
+      .then((response: DownloadResponse | undefined) => {
+        if (!response?.ok) panel.setStatus(url, 'interrupted');
+      })
+      .catch(() => panel.setStatus(url, 'interrupted'));
   },
+});
+
+chrome.runtime.onMessage.addListener((message: BackgroundMessage) => {
+  if (message.type === 'download-status') {
+    panel.setStatus(message.url, message.status);
+  }
 });
 
 function addItems(found: MediaItem[]): void {

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { MediaItem } from '@/shared/types';
+import type { BackgroundMessage, DownloadResponse, DownloadStatus, MediaItem } from '@/shared/types';
 
 const t = (key: string, subs?: string[]) => chrome.i18n.getMessage(key, subs) || key;
 
@@ -11,6 +11,17 @@ export function App() {
   const [items, setItems] = useState<MediaItem[]>([]);
   const [pageUrl, setPageUrl] = useState('');
   const [loading, setLoading] = useState(true);
+  const [statuses, setStatuses] = useState<Record<string, DownloadStatus>>({});
+
+  useEffect(() => {
+    const onMessage = (message: BackgroundMessage) => {
+      if (message.type === 'download-status') {
+        setStatuses((prev) => ({ ...prev, [message.url]: message.status }));
+      }
+    };
+    chrome.runtime.onMessage.addListener(onMessage);
+    return () => chrome.runtime.onMessage.removeListener(onMessage);
+  }, []);
 
   useEffect(() => {
     void (async () => {
@@ -30,7 +41,28 @@ export function App() {
   const isYouTube = /(^|\.)youtube\.com$/.test(safeHostname(pageUrl));
 
   const download = (url: string, filename: string) => {
-    void chrome.runtime.sendMessage({ type: 'download', url, filename });
+    setStatuses((prev) => ({ ...prev, [url]: 'downloading' }));
+    chrome.runtime
+      .sendMessage({ type: 'download', url, filename })
+      .then((response: DownloadResponse | undefined) => {
+        if (!response?.ok) setStatuses((prev) => ({ ...prev, [url]: 'interrupted' }));
+      })
+      .catch(() => setStatuses((prev) => ({ ...prev, [url]: 'interrupted' })));
+  };
+
+  const buttonLabel = (url: string, idle: string) => {
+    const status = statuses[url];
+    if (status === 'downloading') {
+      return (
+        <>
+          <span className="inline-block h-2.5 w-2.5 animate-spin rounded-full border-2 border-current/30 border-t-current align-[-1px]" />{' '}
+          {t('downloading')}
+        </>
+      );
+    }
+    if (status === 'complete') return t('saved');
+    if (status === 'interrupted') return t('downloadError');
+    return idle;
   };
 
   return (
@@ -93,18 +125,20 @@ export function App() {
                   <div className="mt-2 flex flex-wrap gap-1.5">
                     <button
                       onClick={() => download(item.url, item.filename)}
-                      className="cursor-pointer rounded-lg bg-[#bfff00] px-3 py-1.5 text-xs font-bold text-[#0b0d11] hover:brightness-110"
+                      disabled={statuses[item.url] === 'downloading'}
+                      className="cursor-pointer rounded-lg bg-[#bfff00] px-3 py-1.5 text-xs font-bold text-[#0b0d11] hover:brightness-110 disabled:cursor-default disabled:opacity-75"
                     >
-                      {t('downloadVideo')}
+                      {buttonLabel(item.url, t('downloadVideo'))}
                     </button>
                     {item.audioUrl && (
                       <button
                         onClick={() =>
                           download(item.audioUrl!, item.filename.replace(/\.mp4$/, '-audio.mp4'))
                         }
-                        className="cursor-pointer rounded-lg bg-[#23262e] px-3 py-1.5 text-xs font-bold hover:brightness-125"
+                        disabled={statuses[item.audioUrl] === 'downloading'}
+                        className="cursor-pointer rounded-lg bg-[#23262e] px-3 py-1.5 text-xs font-bold hover:brightness-125 disabled:cursor-default disabled:opacity-75"
                       >
-                        {t('downloadAudio')}
+                        {buttonLabel(item.audioUrl, t('downloadAudio'))}
                       </button>
                     )}
                   </div>

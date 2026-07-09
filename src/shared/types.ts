@@ -16,11 +16,19 @@ export interface MediaItem {
   filename: string;
 }
 
+export type DownloadStatus = 'downloading' | 'complete' | 'interrupted';
+
 export type BackgroundMessage =
   | { type: 'media-found'; items: MediaItem[] }
   | { type: 'get-media'; tabId?: number }
   | { type: 'download'; url: string; filename: string }
+  | { type: 'download-status'; url: string; status: DownloadStatus }
   | { type: 'clear-media' };
+
+export interface DownloadResponse {
+  ok: boolean;
+  error?: string;
+}
 
 export interface InterceptorPayload {
   source: 'autoclipper-dl';

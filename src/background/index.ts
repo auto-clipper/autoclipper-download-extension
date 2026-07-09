@@ -39,15 +39,39 @@ chrome.runtime.onMessage.addListener((message: BackgroundMessage, sender, sendRe
       return true; // async response
     }
     case 'download': {
-      void chrome.downloads.download({
-        url: message.url,
-        filename: message.filename,
-        saveAs: false,
-      });
-      break;
+      const tabId = sender.tab?.id;
+      chrome.downloads
+        .download({ url: message.url, filename: message.filename, saveAs: false })
+        .then(async (downloadId) => {
+          // Survive service-worker restarts during long downloads.
+          await chrome.storage.session.set({
+            [`dl:${downloadId}`]: { url: message.url, tabId },
+          });
+          sendResponse({ ok: true });
+        })
+        .catch((error) => sendResponse({ ok: false, error: String(error) }));
+      return true; // async response
     }
   }
   return undefined;
+});
+
+chrome.downloads.onChanged.addListener((delta) => {
+  const state = delta.state?.current;
+  if (state !== 'complete' && state !== 'interrupted') return;
+  void (async () => {
+    const key = `dl:${delta.id}`;
+    const stored = await chrome.storage.session.get(key);
+    const entry = stored[key] as { url: string; tabId?: number } | undefined;
+    if (!entry) return;
+    await chrome.storage.session.remove(key);
+    const message = { type: 'download-status', url: entry.url, status: state };
+    if (entry.tabId !== undefined) {
+      chrome.tabs.sendMessage(entry.tabId, message).catch(() => {});
+    }
+    // Also reaches the popup, if open.
+    chrome.runtime.sendMessage(message).catch(() => {});
+  })();
 });
 
 // A tab navigating away invalidates its detected media.

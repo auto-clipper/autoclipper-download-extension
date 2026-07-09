@@ -1,4 +1,4 @@
-import type { MediaItem } from '@/shared/types';
+import type { DownloadStatus, MediaItem } from '@/shared/types';
 
 interface PanelOptions {
   mode: 'download' | 'youtube';
@@ -8,6 +8,7 @@ interface PanelOptions {
 interface Panel {
   setItems(items: MediaItem[]): void;
   setYouTubeUrl(url: string): void;
+  setStatus(url: string, status: DownloadStatus): void;
 }
 
 const t = (key: string, subs?: string[]) => chrome.i18n.getMessage(key, subs) || key;
@@ -59,6 +60,17 @@ const STYLES = `
   }
   .btn.secondary { background: #23262e; color: #f4f7fb; }
   .btn:hover { filter: brightness(1.1); }
+  .btn:disabled { opacity: 0.75; cursor: default; }
+  .btn.done { background: #23262e; color: #bfff00; }
+  .btn.failed { background: #2e2326; color: #ff6b6b; }
+  .spinner {
+    display: inline-block; width: 11px; height: 11px; margin-right: 6px;
+    border: 2px solid color-mix(in srgb, currentColor 30%, transparent);
+    border-top-color: currentColor;
+    border-radius: 50%; vertical-align: -2px;
+    animation: acdl-spin 0.7s linear infinite;
+  }
+  @keyframes acdl-spin { to { transform: rotate(360deg); } }
   .footer { padding: 10px 16px; font-size: 11.5px; }
   .footer a { color: #00e5ff; text-decoration: none; font-weight: 600; }
   .cta {
@@ -104,6 +116,25 @@ export function createPanel(options: PanelOptions): Panel {
 
   let currentItems: MediaItem[] = [];
   let youtubeUrl = '';
+  const statuses = new Map<string, DownloadStatus>();
+
+  function applyStatus(button: HTMLButtonElement, url: string, idleLabel: string): void {
+    const status = statuses.get(url);
+    button.disabled = status === 'downloading';
+    button.classList.toggle('done', status === 'complete');
+    button.classList.toggle('failed', status === 'interrupted');
+    if (status === 'downloading') {
+      button.replaceChildren();
+      button.appendChild(Object.assign(document.createElement('span'), { className: 'spinner' }));
+      button.appendChild(document.createTextNode(t('downloading')));
+    } else if (status === 'complete') {
+      button.textContent = t('saved');
+    } else if (status === 'interrupted') {
+      button.textContent = t('downloadError');
+    } else {
+      button.textContent = idleLabel;
+    }
+  }
 
   function render(): void {
     const badge = fab.querySelector('.badge')!;
@@ -166,14 +197,18 @@ export function createPanel(options: PanelOptions): Panel {
         actions.className = 'actions';
         const dl = document.createElement('button');
         dl.className = 'btn';
-        dl.textContent = t('downloadVideo');
+        dl.dataset.url = item.url;
+        dl.dataset.idleLabel = t('downloadVideo');
+        applyStatus(dl, item.url, t('downloadVideo'));
         dl.addEventListener('click', () => options.onDownload(item.url, item.filename));
         actions.appendChild(dl);
 
         if (item.audioUrl) {
           const audio = document.createElement('button');
           audio.className = 'btn secondary';
-          audio.textContent = t('downloadAudio');
+          audio.dataset.url = item.audioUrl;
+          audio.dataset.idleLabel = t('downloadAudio');
+          applyStatus(audio, item.audioUrl, t('downloadAudio'));
           audio.addEventListener('click', () =>
             options.onDownload(item.audioUrl!, item.filename.replace(/\.mp4$/, '-audio.mp4')),
           );
@@ -206,6 +241,14 @@ export function createPanel(options: PanelOptions): Panel {
     setYouTubeUrl(url: string) {
       youtubeUrl = url;
       render();
+    },
+    setStatus(url: string, status: DownloadStatus) {
+      statuses.set(url, status);
+      for (const button of panel.querySelectorAll<HTMLButtonElement>(`.btn[data-url]`)) {
+        if (button.dataset.url === url) {
+          applyStatus(button, url, button.dataset.idleLabel ?? t('downloadVideo'));
+        }
+      }
     },
   };
 }

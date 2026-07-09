@@ -11,6 +11,15 @@
   "downloadAudio": {
     "message": "Faixa de áudio"
   },
+  "downloading": {
+    "message": "Baixando…"
+  },
+  "saved": {
+    "message": "Salvo ✓"
+  },
+  "downloadError": {
+    "message": "Falhou — tente de novo"
+  },
   "noVideosFound": {
     "message": "Nenhum vídeo detectado nesta página ainda. Abra um post ou dê play em um vídeo e ele aparecerá aqui."
   },
