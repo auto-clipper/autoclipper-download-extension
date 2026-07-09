@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600;700&family=Instrument+Sans:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../docs/style.css" />
+  <style>
+    html, body { width: 1280px; height: 800px; overflow: hidden; }
+    body::before { mask-image: radial-gradient(ellipse 90% 80% at 50% 20%, black 30%, transparent 80%); }
+    .shot { display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 56px; align-items: center; height: 800px; padding: 0 72px; position: relative; z-index: 1; }
+    .shot h1 { font-size: 52px; }
+    .shot .eyebrow, .shot h1, .shot p, .mock { animation: none; }
+    .shot p { margin-top: 22px; color: var(--muted); font-size: 20px; max-width: 44ch; }
+    .mock { max-width: 460px; justify-self: center; }
+  </style>
+</head>
+<body>
+  <div class="glow glow-lime"></div>
+  <div class="glow glow-cyan"></div>
+  <div class="shot">
+    <div>
+      <span class="eyebrow">Free Chrome extension</span>
+      <h1>Download videos from <span class="grad">Instagram, TikTok, Reddit &amp; X</span> in one click.</h1>
+      <p>No watermarks added, no sign-up, no limits.</p>
+    </div>
+    <div class="mock" aria-hidden="true">
+      <div class="mock-panel">
+        <div class="mock-head"><span>AutoClipper</span><span>✕</span></div>
+        <div class="mock-item"><div class="mock-thumb t1"></div><div class="mock-meta"><div class="mock-line"></div><div class="mock-line short"></div></div><span class="mock-btn">Download</span></div>
+        <div class="mock-item"><div class="mock-thumb t2"></div><div class="mock-meta"><div class="mock-line"></div><div class="mock-line short"></div></div><span class="mock-btn">Download</span></div>
+        <div class="mock-item"><div class="mock-thumb t3"></div><div class="mock-meta"><div class="mock-line"></div><div class="mock-line short"></div></div><span class="mock-btn">Download</span></div>
+        <div class="mock-foot">Powered by AutoClipper →</div>
+      </div>
+      <div class="mock-fab">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 3v10m0 0l-4-4m4 4l4-4" stroke="#0b0d11" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 17h14v3H5z" fill="#0b0d11"/></svg>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

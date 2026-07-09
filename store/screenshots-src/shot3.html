@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600;700&family=Instrument+Sans:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../docs/style.css" />
+  <style>
+    html, body { width: 1280px; height: 800px; overflow: hidden; }
+    .shot { height: 800px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 72px; position: relative; z-index: 1; text-align: center; }
+    .shot h1 { font-size: 46px; max-width: 20ch; }
+    .shot .eyebrow, .shot h1, .shot p { animation: none; }
+    .shot p { margin: 22px auto 0; color: var(--muted); font-size: 19px; max-width: 52ch; }
+    .pills { display: flex; gap: 14px; margin-top: 44px; flex-wrap: wrap; justify-content: center; }
+    .pill { border: 1px solid var(--border); background: var(--card); border-radius: 999px; padding: 12px 24px; font-size: 16px; font-weight: 600; }
+    .pill strong { color: var(--lime); }
+  </style>
+</head>
+<body>
+  <div class="glow glow-lime"></div>
+  <div class="glow glow-cyan"></div>
+  <div class="shot">
+    <span class="eyebrow">Private by design</span>
+    <h1>No accounts. No tracking. <span class="grad">No data collected.</span></h1>
+    <p>Everything runs locally in your browser, with minimal permissions. Made by AutoClipper — the platform that turns videos into viral clips.</p>
+    <div class="pills">
+      <span class="pill"><strong>0</strong> trackers</span>
+      <span class="pill"><strong>0</strong> sign-ups</span>
+      <span class="pill"><strong>2</strong> permissions only</span>
+      <span class="pill"><strong>100%</strong> free</span>
+    </div>
+  </div>
+</body>
+</html>

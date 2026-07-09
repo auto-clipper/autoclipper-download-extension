@@ -11,7 +11,7 @@ Per release:
 2. `npm run zip` → produces `autoclipper-download-extension.zip`
 3. Upload the zip in the [developer dashboard](https://chrome.google.com/webstore/devconsole)
 4. Listing content: copy from `store/listing-en.md` and `store/listing-pt-br.md` (add pt-BR as an additional listing language)
-5. Screenshots: 1280x800, at least one per supported site showing the panel open
+5. Screenshots: ready-made 1280x800 promo tiles in `store/screenshots/` (regenerate via `store/screenshots-src/*.html` + headless Chrome); optionally add real in-situ captures per site
 6. Privacy tab:
    - Single purpose: "Download videos from supported social networks"
    - Permission justifications: `downloads` (save the video file), `storage` (remember detected videos per tab)
