@@ -1,0 +1,26 @@
+{
+  "extName": {
+    "message": "AutoClipper Video Downloader — Instagram, TikTok, Reddit, X"
+  },
+  "extDescription": {
+    "message": "Download videos from Instagram, TikTok, Reddit and X in one click. Free, fast and no watermarks added. By autoclipper.live."
+  },
+  "downloadVideo": {
+    "message": "Download video"
+  },
+  "downloadAudio": {
+    "message": "Audio track"
+  },
+  "noVideosFound": {
+    "message": "No videos detected on this page yet. Open a post or play a video and it will show up here."
+  },
+  "youtubeCtaTitle": {
+    "message": "Turn this video into viral clips"
+  },
+  "youtubeCtaBody": {
+    "message": "Chrome extensions can't download YouTube videos — but AutoClipper can clip, caption and download them for you. Free to try."
+  },
+  "poweredBy": {
+    "message": "Powered by AutoClipper — turn videos into viral clips →"
+  }
+}

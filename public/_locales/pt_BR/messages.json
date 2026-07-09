@@ -1,0 +1,26 @@
+{
+  "extName": {
+    "message": "AutoClipper Baixar Vídeos — Instagram, TikTok, Reddit, X"
+  },
+  "extDescription": {
+    "message": "Baixe vídeos do Instagram, TikTok, Reddit e X em um clique. Grátis, rápido e sem marca d'água adicionada. Por autoclipper.live."
+  },
+  "downloadVideo": {
+    "message": "Baixar vídeo"
+  },
+  "downloadAudio": {
+    "message": "Faixa de áudio"
+  },
+  "noVideosFound": {
+    "message": "Nenhum vídeo detectado nesta página ainda. Abra um post ou dê play em um vídeo e ele aparecerá aqui."
+  },
+  "youtubeCtaTitle": {
+    "message": "Transforme este vídeo em cortes virais"
+  },
+  "youtubeCtaBody": {
+    "message": "Extensões do Chrome não podem baixar vídeos do YouTube — mas o AutoClipper corta, legenda e baixa para você. Teste grátis."
+  },
+  "poweredBy": {
+    "message": "Feito pelo AutoClipper — transforme vídeos em cortes virais →"
+  }
+}

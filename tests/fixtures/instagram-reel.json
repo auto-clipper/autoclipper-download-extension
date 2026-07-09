@@ -1,0 +1,32 @@
+{
+  "items": [
+    {
+      "pk": "3412345678901234567",
+      "id": "3412345678901234567_123456",
+      "code": "DAbCdEfGhIj",
+      "caption": {
+        "text": "Como viralizar no Instagram em 2026 🚀\n#reels #viral"
+      },
+      "video_versions": [
+        {
+          "type": 101,
+          "url": "https://scontent.cdninstagram.com/o1/v/t16/f2/m86/reel-hd.mp4?efg=abc&_nc_ht=scontent",
+          "width": 720,
+          "height": 1280
+        },
+        {
+          "type": 102,
+          "url": "https://scontent.cdninstagram.com/o1/v/t16/f2/m86/reel-sd.mp4?efg=abc",
+          "width": 480,
+          "height": 854
+        }
+      ],
+      "image_versions2": {
+        "candidates": [
+          { "url": "https://scontent.cdninstagram.com/v/t51/thumb.jpg", "width": 720, "height": 1280 }
+        ]
+      }
+    }
+  ],
+  "status": "ok"
+}

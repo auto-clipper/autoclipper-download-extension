@@ -1,0 +1,22 @@
+{
+  "itemInfo": {
+    "itemStruct": {
+      "id": "7412345678901234567",
+      "desc": "POV: você descobre o AutoClipper 😱 #fyp",
+      "author": {
+        "uniqueId": "autoclipper.live",
+        "nickname": "AutoClipper"
+      },
+      "video": {
+        "id": "7412345678901234567",
+        "height": 1024,
+        "width": 576,
+        "duration": 21,
+        "cover": "https://p16-sign-va.tiktokcdn.com/obj/cover.jpeg",
+        "playAddr": "https://v16-webapp-prime.tiktok.com/video/tos/useast2a/play/?video_id=v0f044g&line=0",
+        "downloadAddr": "https://v16-webapp-prime.tiktok.com/video/tos/useast2a/download/?video_id=v0f044g&line=0"
+      }
+    }
+  },
+  "statusCode": 0
+}

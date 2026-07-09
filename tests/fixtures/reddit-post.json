@@ -1,0 +1,29 @@
+[
+  {
+    "kind": "Listing",
+    "data": {
+      "children": [
+        {
+          "kind": "t3",
+          "data": {
+            "title": "Cat discovers the vacuum cleaner",
+            "permalink": "/r/funny/comments/1abcde/cat_discovers_the_vacuum_cleaner/",
+            "thumbnail": "https://b.thumbs.redditmedia.com/thumb.jpg",
+            "secure_media": {
+              "reddit_video": {
+                "bitrate_kbps": 2400,
+                "fallback_url": "https://v.redd.it/abc123xyz/DASH_720.mp4?source=fallback",
+                "has_audio": true,
+                "height": 720,
+                "width": 1280,
+                "duration": 14,
+                "hls_url": "https://v.redd.it/abc123xyz/HLSPlaylist.m3u8",
+                "is_gif": false
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+]

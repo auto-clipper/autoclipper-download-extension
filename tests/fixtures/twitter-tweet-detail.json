@@ -1,0 +1,40 @@
+{
+  "data": {
+    "tweetResult": {
+      "result": {
+        "legacy": {
+          "id_str": "1812345678901234567",
+          "extended_entities": {
+            "media": [
+              {
+                "id_str": "1812345678900000001",
+                "media_url_https": "https://pbs.twimg.com/ext_tw_video_thumb/181/pu/img/thumb.jpg",
+                "type": "video",
+                "video_info": {
+                  "aspect_ratio": [9, 16],
+                  "duration_millis": 30500,
+                  "variants": [
+                    {
+                      "content_type": "application/x-mpegURL",
+                      "url": "https://video.twimg.com/ext_tw_video/1812345678900000001/pu/pl/playlist.m3u8"
+                    },
+                    {
+                      "bitrate": 632000,
+                      "content_type": "video/mp4",
+                      "url": "https://video.twimg.com/ext_tw_video/1812345678900000001/pu/vid/avc1/320x568/low.mp4"
+                    },
+                    {
+                      "bitrate": 2176000,
+                      "content_type": "video/mp4",
+                      "url": "https://video.twimg.com/ext_tw_video/1812345678900000001/pu/vid/avc1/720x1280/high.mp4"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}
