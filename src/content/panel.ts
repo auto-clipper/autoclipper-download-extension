@@ -9,6 +9,10 @@ interface Panel {
   setItems(items: MediaItem[]): void;
   setYouTubeUrl(url: string): void;
   setStatus(url: string, status: DownloadStatus): void;
+  /** Revert a button to idle if it is still on the spinner (safety timeout). */
+  resetIfDownloading(url: string): void;
+  /** Replace the panel body with an "extension updated, refresh page" notice. */
+  showStaleNotice(): void;
 }
 
 const t = (key: string, subs?: string[]) => chrome.i18n.getMessage(key, subs) || key;
@@ -81,6 +85,7 @@ const STYLES = `
   }
   .cta strong { color: #bfff00; }
   .empty { padding: 20px 16px; font-size: 12.5px; color: #8a93a3; }
+  .stale { padding: 20px 16px; font-size: 12.5px; line-height: 1.5; color: #ffd166; }
 `;
 
 const LOGO_SVG = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -249,6 +254,26 @@ export function createPanel(options: PanelOptions): Panel {
           applyStatus(button, url, button.dataset.idleLabel ?? t('downloadVideo'));
         }
       }
+    },
+    resetIfDownloading(url: string) {
+      if (statuses.get(url) !== 'downloading') return;
+      statuses.delete(url);
+      for (const button of panel.querySelectorAll<HTMLButtonElement>(`.btn[data-url]`)) {
+        if (button.dataset.url === url) {
+          applyStatus(button, url, button.dataset.idleLabel ?? t('downloadVideo'));
+        }
+      }
+    },
+    showStaleNotice() {
+      // The i18n bundle is unreachable once the context is invalidated, so
+      // this string is hardcoded bilingually.
+      const notice = document.createElement('div');
+      notice.className = 'stale';
+      notice.textContent =
+        'AutoClipper was updated — refresh this page to keep downloading. / ' +
+        'O AutoClipper foi atualizado — recarregue esta página para continuar baixando.';
+      panel.replaceChildren(notice);
+      panel.classList.add('open');
     },
   };
 }

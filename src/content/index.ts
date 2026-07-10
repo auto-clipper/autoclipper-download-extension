@@ -13,16 +13,43 @@ const isYouTube = host.endsWith('youtube.com');
 const provider = providerForHost(host);
 
 const items = new Map<string, MediaItem>();
+
+/**
+ * Reloading/updating the extension orphans the content scripts of already
+ * open tabs: the panel still renders, but every chrome.runtime call throws
+ * "Extension context invalidated". Detect that and say so, instead of
+ * showing a misleading download failure.
+ */
+function isStaleContext(error: unknown): boolean {
+  return String(error).includes('Extension context invalidated');
+}
+
 const panel = createPanel({
   mode: isYouTube ? 'youtube' : 'download',
   onDownload: (url, filename) => {
     panel.setStatus(url, 'downloading');
-    chrome.runtime
-      .sendMessage({ type: 'download', url, filename })
-      .then((response: DownloadResponse | undefined) => {
-        if (!response?.ok) panel.setStatus(url, 'interrupted');
-      })
-      .catch(() => panel.setStatus(url, 'interrupted'));
+    try {
+      chrome.runtime
+        .sendMessage({ type: 'download', url, filename })
+        .then((response: DownloadResponse | undefined) => {
+          // Only an explicit rejection means the download failed to start.
+          // An undefined response is a messaging anomaly — the download is
+          // usually running; let download-status events settle the outcome,
+          // but fall back to idle so the button never hangs on the spinner.
+          if (response && !response.ok) {
+            panel.setStatus(url, 'interrupted');
+          } else if (!response) {
+            setTimeout(() => panel.resetIfDownloading(url), 20_000);
+          }
+        })
+        .catch((error) => {
+          if (isStaleContext(error)) panel.showStaleNotice();
+          else setTimeout(() => panel.resetIfDownloading(url), 20_000);
+        });
+    } catch (error) {
+      if (isStaleContext(error)) panel.showStaleNotice();
+      else panel.setStatus(url, 'interrupted');
+    }
   },
 });
 

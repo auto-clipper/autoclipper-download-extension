@@ -38,6 +38,10 @@ Load in Chrome: `chrome://extensions` → enable Developer mode → "Load unpack
 - [ ] Popup mirrors the page's detected videos; badge shows the count
 - [ ] Both locales render (`chrome://settings/languages` → move pt-BR to top to test)
 
+## Troubleshooting
+
+- **After reloading the extension** (`chrome://extensions` → ↻) or rebuilding `dist/`, refresh any social-network tabs that were already open. Chrome orphans the old content scripts in those tabs — the panel shows an "extension updated, refresh the page" notice if you click a button there. This affects development only; store users get updates on browser restart.
+
 ## Known limitations
 
 - **Reddit audio**: v.redd.it serves video and audio as separate DASH tracks. v1 offers them as two downloads instead of muxing client-side. Planned v2: mux in an offscreen document (ffmpeg.wasm or mp4box.js).

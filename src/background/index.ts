@@ -48,6 +48,12 @@ chrome.runtime.onMessage.addListener((message: BackgroundMessage, sender, sendRe
             [`dl:${downloadId}`]: { url: message.url, tabId },
           });
           sendResponse({ ok: true });
+          // The download may already have finished while the record was
+          // being written — onChanged would have found nothing to notify.
+          const [item] = await chrome.downloads.search({ id: downloadId });
+          if (item && (item.state === 'complete' || item.state === 'interrupted')) {
+            await notifyDownloadStatus(downloadId, item.state);
+          }
         })
         .catch((error) => sendResponse({ ok: false, error: String(error) }));
       return true; // async response
@@ -56,22 +62,27 @@ chrome.runtime.onMessage.addListener((message: BackgroundMessage, sender, sendRe
   return undefined;
 });
 
+async function notifyDownloadStatus(
+  downloadId: number,
+  status: 'complete' | 'interrupted',
+): Promise<void> {
+  const key = `dl:${downloadId}`;
+  const stored = await chrome.storage.session.get(key);
+  const entry = stored[key] as { url: string; tabId?: number } | undefined;
+  if (!entry) return;
+  await chrome.storage.session.remove(key);
+  const message = { type: 'download-status', url: entry.url, status };
+  if (entry.tabId !== undefined) {
+    chrome.tabs.sendMessage(entry.tabId, message).catch(() => {});
+  }
+  // Also reaches the popup, if open.
+  chrome.runtime.sendMessage(message).catch(() => {});
+}
+
 chrome.downloads.onChanged.addListener((delta) => {
   const state = delta.state?.current;
   if (state !== 'complete' && state !== 'interrupted') return;
-  void (async () => {
-    const key = `dl:${delta.id}`;
-    const stored = await chrome.storage.session.get(key);
-    const entry = stored[key] as { url: string; tabId?: number } | undefined;
-    if (!entry) return;
-    await chrome.storage.session.remove(key);
-    const message = { type: 'download-status', url: entry.url, status: state };
-    if (entry.tabId !== undefined) {
-      chrome.tabs.sendMessage(entry.tabId, message).catch(() => {});
-    }
-    // Also reaches the popup, if open.
-    chrome.runtime.sendMessage(message).catch(() => {});
-  })();
+  void notifyDownloadStatus(delta.id, state);
 });
 
 // A tab navigating away invalidates its detected media.

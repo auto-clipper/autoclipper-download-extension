@@ -42,12 +42,25 @@ export function App() {
 
   const download = (url: string, filename: string) => {
     setStatuses((prev) => ({ ...prev, [url]: 'downloading' }));
+    const resetIfDownloading = () =>
+      setStatuses((prev) => {
+        if (prev[url] !== 'downloading') return prev;
+        const next = { ...prev };
+        delete next[url];
+        return next;
+      });
     chrome.runtime
       .sendMessage({ type: 'download', url, filename })
       .then((response: DownloadResponse | undefined) => {
-        if (!response?.ok) setStatuses((prev) => ({ ...prev, [url]: 'interrupted' }));
+        // Only an explicit rejection means the download failed to start;
+        // otherwise download-status events settle the outcome.
+        if (response && !response.ok) {
+          setStatuses((prev) => ({ ...prev, [url]: 'interrupted' }));
+        } else if (!response) {
+          setTimeout(resetIfDownloading, 20_000);
+        }
       })
-      .catch(() => setStatuses((prev) => ({ ...prev, [url]: 'interrupted' })));
+      .catch(() => setTimeout(resetIfDownloading, 20_000));
   };
 
   const buttonLabel = (url: string, idle: string) => {
