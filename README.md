@@ -44,7 +44,7 @@ Load in Chrome: `chrome://extensions` → enable Developer mode → "Load unpack
 
 ## Known limitations
 
-- **Reddit audio**: v.redd.it serves video and audio as separate DASH tracks. v1 offers them as two downloads instead of muxing client-side. Planned v2: mux in an offscreen document (ffmpeg.wasm or mp4box.js).
+- **Reddit**: videos are detected in feeds and on post pages by reading the shreddit players' `packaged-media-json` (complete MP4s with audio muxed in — served from packaged-media.redd.it). The post-JSON fallback path (old.reddit, posts without packaged media) still yields the separate video/audio DASH-or-CMAF tracks with no client-side muxing; there the audio is offered as a second download.
 - **Stories/live**: not explicitly targeted; whatever the interceptor catches, works.
 - Sites change their APIs regularly — the extractors are shape-tolerant (recursive JSON walk), but expect occasional maintenance. Fixtures in `tests/fixtures/` document the shapes we rely on.
 

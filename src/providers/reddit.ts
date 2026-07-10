@@ -60,7 +60,60 @@ export const reddit: Provider = {
   },
 };
 
-/** Derive the audio track URL from a DASH video fallback URL. */
+/**
+ * Derive the audio track URL from a video fallback URL. Reddit serves
+ * `DASH_<res>.mp4` (legacy) and `CMAF_<res>.mp4` (2026 rollout); the audio
+ * track sits next to it with the same prefix.
+ */
 export function redditAudioUrl(videoUrl: string): string {
-  return videoUrl.replace(/DASH_\d+\.mp4.*$/, 'DASH_AUDIO_128.mp4');
+  return videoUrl.replace(/(DASH|CMAF)_\d+\.mp4.*$/, '$1_AUDIO_128.mp4');
+}
+
+export interface PackagedMediaMeta {
+  title?: string;
+  permalink?: string;
+  pageUrl: string;
+}
+
+/**
+ * Extract a media item from a `packaged-media-json` attribute, which
+ * shreddit `<shreddit-player>` elements carry both in feeds and on post
+ * pages. Its `playbackMp4s.permutations` are complete MP4s with the audio
+ * already muxed in — better than the separate-track fallback_url, and the
+ * only client-side source available while scrolling a feed.
+ */
+export function extractFromPackagedMedia(
+  attrJson: string,
+  meta: PackagedMediaMeta,
+): MediaItem | null {
+  let parsed: any;
+  try {
+    parsed = JSON.parse(attrJson);
+  } catch {
+    return null;
+  }
+  const permutations = parsed?.playbackMp4s?.permutations;
+  if (!Array.isArray(permutations) || permutations.length === 0) return null;
+
+  const best = [...permutations]
+    .filter((p: any) => typeof p?.source?.url === 'string')
+    .sort(
+      (a: any, b: any) =>
+        (b.source.dimensions?.height ?? 0) - (a.source.dimensions?.height ?? 0),
+    )[0];
+  if (!best) return null;
+
+  const url: string = best.source.url;
+  const idMatch = /(?:v|packaged-media)\.redd\.it\/([^/]+)\//.exec(url);
+  const id = idMatch?.[1] ?? url.slice(-24);
+
+  return {
+    id: `reddit:${id}`,
+    provider: 'reddit',
+    url,
+    pageUrl: meta.permalink ? `https://www.reddit.com${meta.permalink}` : meta.pageUrl,
+    title: meta.title,
+    quality: best.source.dimensions?.height ? `${best.source.dimensions.height}p` : undefined,
+    filename: buildFilename('reddit', meta.title, id),
+  };
 }

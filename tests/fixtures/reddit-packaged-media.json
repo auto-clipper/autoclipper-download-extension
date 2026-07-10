@@ -1,0 +1,26 @@
+{
+  "playbackMp4s": {
+    "permutations": [
+      {
+        "source": {
+          "url": "https://packaged-media.redd.it/hse3p7zucq6h1/pb/m2-res_240p.mp4?m=AQAA",
+          "dimensions": { "width": 135, "height": 240 }
+        }
+      },
+      {
+        "source": {
+          "url": "https://packaged-media.redd.it/hse3p7zucq6h1/pb/m2-res_720p.mp4?m=AQAA",
+          "dimensions": { "width": 405, "height": 720 }
+        }
+      },
+      {
+        "source": {
+          "url": "https://packaged-media.redd.it/hse3p7zucq6h1/pb/m2-res_1080p.mp4?m=AQAA",
+          "dimensions": { "width": 607, "height": 1080 }
+        },
+        "videoCodec": "H264"
+      }
+    ],
+    "duration": 14
+  }
+}

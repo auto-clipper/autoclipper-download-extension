@@ -5,6 +5,7 @@ import type {
   MediaItem,
 } from '@/shared/types';
 import { providerForHost } from '@/providers/registry';
+import { extractFromPackagedMedia } from '@/providers/reddit';
 import { extractTikTokFromRehydration } from '@/providers/tiktok';
 import { createPanel } from './panel';
 
@@ -109,6 +110,26 @@ async function scanRedditPost(): Promise<void> {
   }
 }
 
+// --- Reddit feeds: shreddit players carry packaged (audio-muxed) MP4s ---
+function scanRedditDom(): void {
+  const players = document.querySelectorAll(
+    'shreddit-player[packaged-media-json], shreddit-player-2[packaged-media-json]',
+  );
+  const found: MediaItem[] = [];
+  for (const player of players) {
+    const attr = player.getAttribute('packaged-media-json');
+    if (!attr) continue;
+    const post = player.closest('shreddit-post');
+    const item = extractFromPackagedMedia(attr, {
+      title: post?.getAttribute('post-title') ?? undefined,
+      permalink: post?.getAttribute('permalink') ?? undefined,
+      pageUrl: window.location.href,
+    });
+    if (item) found.push(item);
+  }
+  if (found.length) addItems(found);
+}
+
 function onNavigate(): void {
   if (provider?.id === 'reddit') void scanRedditPost();
   if (provider?.id === 'tiktok') scanTikTokRehydration();
@@ -116,12 +137,16 @@ function onNavigate(): void {
 }
 
 // SPA navigation: these sites rewrite history instead of reloading.
+// Reddit is also re-scanned every tick — feeds stream in new posts
+// continuously while scrolling, with no URL change to key off.
 let lastHref = window.location.href;
 setInterval(() => {
   if (window.location.href !== lastHref) {
     lastHref = window.location.href;
     onNavigate();
   }
+  if (provider?.id === 'reddit') scanRedditDom();
 }, 1500);
 
 onNavigate();
+if (provider?.id === 'reddit') scanRedditDom();

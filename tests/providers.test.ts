@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { instagram } from '@/providers/instagram';
 import { tiktok } from '@/providers/tiktok';
 import { twitter } from '@/providers/twitter';
-import { reddit, redditAudioUrl } from '@/providers/reddit';
+import { reddit, redditAudioUrl, extractFromPackagedMedia } from '@/providers/reddit';
 import { providerForHost } from '@/providers/registry';
 import { sanitizeFilename, buildFilename } from '@/shared/walk';
 
@@ -58,10 +58,34 @@ describe('reddit', () => {
     expect(items[0].pageUrl).toContain('/r/funny/comments/1abcde/');
   });
 
-  it('derives audio URLs from any DASH resolution', () => {
+  it('derives audio URLs from DASH and CMAF resolutions', () => {
     expect(redditAudioUrl('https://v.redd.it/x/DASH_1080.mp4')).toBe(
       'https://v.redd.it/x/DASH_AUDIO_128.mp4',
     );
+    expect(redditAudioUrl('https://v.redd.it/x/CMAF_1080.mp4')).toBe(
+      'https://v.redd.it/x/CMAF_AUDIO_128.mp4',
+    );
+  });
+
+  it('extracts the best packaged (audio-muxed) MP4 from shreddit player data', () => {
+    const item = extractFromPackagedMedia(fixture('reddit-packaged-media.json'), {
+      title: 'Mother bird stood her ground',
+      permalink: '/r/nextfuckinglevel/comments/1u3dmle/mother_bird/',
+      pageUrl: 'https://www.reddit.com/r/nextfuckinglevel/',
+    });
+    expect(item).not.toBeNull();
+    expect(item!.url).toContain('m2-res_1080p.mp4');
+    expect(item!.id).toBe('reddit:hse3p7zucq6h1');
+    expect(item!.quality).toBe('1080p');
+    expect(item!.audioUrl).toBeUndefined();
+    expect(item!.pageUrl).toBe(
+      'https://www.reddit.com/r/nextfuckinglevel/comments/1u3dmle/mother_bird/',
+    );
+  });
+
+  it('returns null for malformed packaged media', () => {
+    expect(extractFromPackagedMedia('not json', { pageUrl: 'x' })).toBeNull();
+    expect(extractFromPackagedMedia('{"playbackMp4s":{"permutations":[]}}', { pageUrl: 'x' })).toBeNull();
   });
 });
 
