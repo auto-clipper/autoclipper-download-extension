@@ -18,11 +18,18 @@ export interface MediaItem {
 
 export type DownloadStatus = 'downloading' | 'complete' | 'interrupted';
 
+/** Logged-in AutoClipper user, as observed on app.autoclipper.live. */
+export interface AuthUser {
+  username?: string | null;
+  email?: string | null;
+}
+
 export type BackgroundMessage =
   | { type: 'media-found'; items: MediaItem[] }
   | { type: 'get-media'; tabId?: number }
   | { type: 'download'; url: string; filename: string }
   | { type: 'download-status'; url: string; status: DownloadStatus }
+  | { type: 'auth-state'; user: AuthUser | null }
   | { type: 'clear-media' };
 
 export interface DownloadResponse {

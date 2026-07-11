@@ -23,6 +23,18 @@
   "noVideosFound": {
     "message": "No videos detected on this page yet. Open a post or play a video and it will show up here."
   },
+  "sendToAutoclipperTitle": {
+    "message": "Send to AutoClipper"
+  },
+  "sendToAutoclipperBody": {
+    "message": "Open this video in AutoClipper and turn it into viral clips with captions — automatically."
+  },
+  "loginWithAutoclipper": {
+    "message": "Sign in with AutoClipper"
+  },
+  "loggedInAs": {
+    "message": "Signed in as $1"
+  },
   "youtubeCtaTitle": {
     "message": "Turn this video into viral clips"
   },

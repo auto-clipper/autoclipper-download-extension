@@ -38,6 +38,10 @@ chrome.runtime.onMessage.addListener((message: BackgroundMessage, sender, sendRe
       void getMedia(tabId).then(sendResponse);
       return true; // async response
     }
+    case 'auth-state': {
+      void chrome.storage.local.set({ acAuth: message.user });
+      break;
+    }
     case 'download': {
       const tabId = sender.tab?.id;
       chrome.downloads

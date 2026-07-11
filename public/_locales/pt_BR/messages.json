@@ -23,6 +23,18 @@
   "noVideosFound": {
     "message": "Nenhum vídeo detectado nesta página ainda. Abra um post ou dê play em um vídeo e ele aparecerá aqui."
   },
+  "sendToAutoclipperTitle": {
+    "message": "Enviar para o AutoClipper"
+  },
+  "sendToAutoclipperBody": {
+    "message": "Abra este vídeo no AutoClipper e transforme em cortes virais com legenda — automaticamente."
+  },
+  "loginWithAutoclipper": {
+    "message": "Entrar com AutoClipper"
+  },
+  "loggedInAs": {
+    "message": "Conectado como $1"
+  },
   "youtubeCtaTitle": {
     "message": "Transforme este vídeo em cortes virais"
   },

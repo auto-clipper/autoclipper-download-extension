@@ -14,7 +14,7 @@ Per release:
 5. Screenshots: ready-made 1280x800 promo tiles in `store/screenshots/` (regenerate via `store/screenshots-src/*.html` + headless Chrome); optionally add real in-situ captures per site
 6. Privacy tab:
    - Single purpose: "Download videos from supported social networks"
-   - Permission justifications: `downloads` (save the video file), `storage` (remember detected videos per tab)
+   - Permission justifications: `downloads` (save the video file), `storage` (remember detected videos per tab; remember AutoClipper sign-in status), site access to app.autoclipper.live (our own web app — shows the user's sign-in status in the popup)
    - Data usage: "Does not collect user data"
    - Privacy policy URL: https://auto-clipper.github.io/autoclipper-download-extension/privacy.html
 7. Submit for review

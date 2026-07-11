@@ -5,8 +5,9 @@ Chrome MV3 extension. Read `README.md` first for architecture; this file only ad
 ## Non-negotiable constraints
 
 1. **Never add YouTube download capability.** Chrome Web Store policy forbids it; violating this gets the extension (and the SEO strategy behind it) taken down. YouTube pages get the autoclipper.live CTA only.
-2. **Keep permissions minimal.** `downloads` + `storage` and content-script matches only. Do not add `host_permissions`, `webRequest`, `tabs` or `<all_urls>` without a strong reason — each addition slows or blocks store review.
-3. **The extension exists to drive traffic to https://autoclipper.live.** Keep the branding, `homepage_url`, panel/popup links and UTM parameters intact.
+2. **Keep permissions minimal.** `downloads` + `storage` and content-script matches only (social sites + `app.autoclipper.live` for sign-in status). Do not add `host_permissions`, `webRequest`, `tabs` or `<all_urls>` without a strong reason — each addition slows or blocks store review.
+3. **Deep-link contract with the app:** `https://app.autoclipper.live/projects?video=<encoded URL>` starts the URL-upload flow (frontend `src/lib/content/parseVideoDeepLink.ts` in autoclipper-new-frontend). If you change the param name or route here, change the frontend in the same PR.
+4. **The extension exists to drive traffic to https://autoclipper.live.** Keep the branding, `homepage_url`, panel/popup links and UTM parameters intact.
 
 ## Architecture rules
 

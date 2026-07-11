@@ -17,13 +17,15 @@ const REDDIT_MATCHES = [
 
 const YOUTUBE_MATCHES = ['https://www.youtube.com/*', 'https://m.youtube.com/*'];
 
+const AUTOCLIPPER_APP_MATCHES = ['https://app.autoclipper.live/*'];
+
 export default defineManifest({
   manifest_version: 3,
   name: '__MSG_extName__',
   short_name: 'AutoClipper DL',
   description: '__MSG_extDescription__',
   default_locale: 'en',
-  version: '0.1.0',
+  version: '0.2.0',
   minimum_chrome_version: '111',
   homepage_url: 'https://autoclipper.live',
   icons: {
@@ -56,6 +58,12 @@ export default defineManifest({
       run_at: 'document_start',
       // Runs in the page's JS context so it can observe fetch/XHR payloads.
       world: 'MAIN',
+    },
+    {
+      // Mirrors the app's login state into the extension (popup greeting).
+      matches: AUTOCLIPPER_APP_MATCHES,
+      js: ['src/content/autoclipper.ts'],
+      run_at: 'document_idle',
     },
   ],
   permissions: ['downloads', 'storage'],

@@ -1,9 +1,17 @@
 import { useEffect, useState } from 'react';
-import type { BackgroundMessage, DownloadResponse, DownloadStatus, MediaItem } from '@/shared/types';
+import type {
+  AuthUser,
+  BackgroundMessage,
+  DownloadResponse,
+  DownloadStatus,
+  MediaItem,
+} from '@/shared/types';
 
 const t = (key: string, subs?: string[]) => chrome.i18n.getMessage(key, subs) || key;
 
 const SITE_URL = 'https://autoclipper.live/?utm_source=chrome-extension&utm_medium=popup';
+const APP_URL = 'https://app.autoclipper.live';
+const LOGIN_URL = `${APP_URL}/login?redirect=%2Fprojects&utm_source=chrome-extension&utm_medium=popup-login`;
 
 const SUPPORTED_HINT = 'Instagram · TikTok · X · Reddit';
 
@@ -12,6 +20,13 @@ export function App() {
   const [pageUrl, setPageUrl] = useState('');
   const [loading, setLoading] = useState(true);
   const [statuses, setStatuses] = useState<Record<string, DownloadStatus>>({});
+  const [authUser, setAuthUser] = useState<AuthUser | null>(null);
+
+  useEffect(() => {
+    void chrome.storage.local.get('acAuth').then((stored) => {
+      setAuthUser((stored.acAuth as AuthUser | null) ?? null);
+    });
+  }, []);
 
   useEffect(() => {
     const onMessage = (message: BackgroundMessage) => {
@@ -39,6 +54,8 @@ export function App() {
   }, []);
 
   const isYouTube = /(^|\.)youtube\.com$/.test(safeHostname(pageUrl));
+  const isWatchPage = isYouTube && /\/watch\b|\/live\//.test(safePathname(pageUrl));
+  const sendToAppUrl = `${APP_URL}/projects?video=${encodeURIComponent(pageUrl)}&utm_source=chrome-extension&utm_medium=popup-send`;
 
   const download = (url: string, filename: string) => {
     setStatuses((prev) => ({ ...prev, [url]: 'downloading' }));
@@ -101,6 +118,17 @@ export function App() {
       <main className="max-h-[380px] overflow-y-auto">
         {loading ? (
           <p className="px-4 py-6 text-xs text-[#8a93a3]">…</p>
+        ) : isWatchPage ? (
+          <a
+            href={sendToAppUrl}
+            target="_blank"
+            rel="noopener"
+            className="m-4 block rounded-xl border border-[#bfff00]/40 bg-gradient-to-br from-[#bfff00]/10 to-[#00e5ff]/10 p-4 text-xs leading-relaxed no-underline"
+          >
+            <strong className="text-[#bfff00]">{t('sendToAutoclipperTitle')}</strong>
+            <br />
+            {t('sendToAutoclipperBody')}
+          </a>
         ) : isYouTube ? (
           <a
             href={`https://autoclipper.live/?utm_source=chrome-extension&utm_medium=popup-youtube&video=${encodeURIComponent(pageUrl)}`}
@@ -163,6 +191,32 @@ export function App() {
       </main>
 
       <footer className="border-t border-[#23262e] px-4 py-3">
+        <div className="mb-2 flex items-center justify-between gap-2">
+          {authUser ? (
+            <a
+              href={`${APP_URL}/projects?utm_source=chrome-extension&utm_medium=popup-account`}
+              target="_blank"
+              rel="noopener"
+              className="flex min-w-0 items-center gap-2 text-xs text-[#8a93a3] no-underline hover:text-[#bfff00]"
+            >
+              <span className="inline-flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#bfff00] to-[#00e5ff] text-[10px] font-bold text-[#0b0d11]">
+                {(authUser.username ?? authUser.email ?? '?').charAt(0).toUpperCase()}
+              </span>
+              <span className="truncate">
+                {t('loggedInAs', [authUser.username ?? authUser.email ?? ''])}
+              </span>
+            </a>
+          ) : (
+            <a
+              href={LOGIN_URL}
+              target="_blank"
+              rel="noopener"
+              className="rounded-lg border border-[#bfff00]/50 px-3 py-1.5 text-xs font-bold text-[#bfff00] no-underline hover:bg-[#bfff00]/10"
+            >
+              {t('loginWithAutoclipper')}
+            </a>
+          )}
+        </div>
         <a
           href={SITE_URL}
           target="_blank"
@@ -179,6 +233,14 @@ export function App() {
 function safeHostname(url: string): string {
   try {
     return new URL(url).hostname;
+  } catch {
+    return '';
+  }
+}
+
+function safePathname(url: string): string {
+  try {
+    return new URL(url).pathname;
   } catch {
     return '';
   }

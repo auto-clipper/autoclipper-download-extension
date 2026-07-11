@@ -17,6 +17,14 @@ interface Panel {
 
 const t = (key: string, subs?: string[]) => chrome.i18n.getMessage(key, subs) || key;
 
+function safePathname(url: string): string {
+  try {
+    return new URL(url).pathname;
+  } catch {
+    return '';
+  }
+}
+
 const SITE_URL = 'https://autoclipper.live/?utm_source=chrome-extension&utm_medium=panel';
 
 const STYLES = `
@@ -162,8 +170,16 @@ export function createPanel(options: PanelOptions): Panel {
       cta.className = 'cta';
       cta.target = '_blank';
       cta.rel = 'noopener';
-      cta.href = `https://autoclipper.live/?utm_source=chrome-extension&utm_medium=youtube-cta&video=${encodeURIComponent(youtubeUrl)}`;
-      cta.innerHTML = `<strong>${t('youtubeCtaTitle')}</strong><br/>${t('youtubeCtaBody')}`;
+      // Long-form watch pages get "Send to AutoClipper" — a deep link into
+      // the app that starts processing this video (see /projects?video=).
+      const isWatchPage = /\/watch\b|\/live\//.test(safePathname(youtubeUrl));
+      if (isWatchPage) {
+        cta.href = `https://app.autoclipper.live/projects?video=${encodeURIComponent(youtubeUrl)}&utm_source=chrome-extension&utm_medium=youtube-send`;
+        cta.innerHTML = `<strong>${t('sendToAutoclipperTitle')}</strong><br/>${t('sendToAutoclipperBody')}`;
+      } else {
+        cta.href = `https://autoclipper.live/?utm_source=chrome-extension&utm_medium=youtube-cta&video=${encodeURIComponent(youtubeUrl)}`;
+        cta.innerHTML = `<strong>${t('youtubeCtaTitle')}</strong><br/>${t('youtubeCtaBody')}`;
+      }
       panel.appendChild(cta);
     } else {
       badge.textContent = String(currentItems.length);

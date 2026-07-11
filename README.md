@@ -14,6 +14,11 @@ Landing page (GitHub Pages, served from `docs/`): https://auto-clipper.github.io
 
 Files are saved to `Downloads/autoclipper/<provider>-<title-or-id>.mp4`.
 
+## AutoClipper app integration
+
+- **Send to AutoClipper** — on YouTube watch/live pages, the panel and popup show a "Send to AutoClipper" CTA that deep-links into the app: `https://app.autoclipper.live/projects?video=<encoded video URL>`. The app's `/projects` page consumes the `video` query param and starts the URL-upload flow automatically (frontend: `parseVideoDeepLink` + effect in `ProjectsListPage`). The param survives the login redirect (`/login?redirect=...`). YouTube Shorts keep the generic landing-page CTA.
+- **Sign-in status** — a content script on `app.autoclipper.live` (`src/content/autoclipper.ts`) mirrors the app's localStorage login state (username/email only, never the token) into `chrome.storage.local`, so the popup greets logged-in users and shows a "Sign in with AutoClipper" button otherwise. This data never leaves the browser.
+
 ## Development
 
 ```bash
