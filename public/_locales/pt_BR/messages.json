@@ -3,7 +3,7 @@
     "message": "AutoClipper Baixar Vídeos — Instagram, TikTok, Reddit, X"
   },
   "extDescription": {
-    "message": "Baixe vídeos do Instagram, TikTok, Reddit e X em um clique. Grátis, rápido e sem marca d'água adicionada. Por autoclipper.live."
+    "message": "Baixe vídeos do Instagram, TikTok, Reddit, X e Twitch em um clique. Grátis, rápido e sem marca d'água adicionada. Por autoclipper.live."
   },
   "downloadVideo": {
     "message": "Baixar vídeo"
@@ -26,6 +26,9 @@
   "sendToAutoclipperTitle": {
     "message": "Enviar para o AutoClipper"
   },
+  "sendToAutoclipperShort": {
+    "message": "Enviar ao AutoClipper"
+  },
   "sendToAutoclipperBody": {
     "message": "Abra este vídeo no AutoClipper e transforme em cortes virais com legenda — automaticamente."
   },
@@ -40,6 +43,33 @@
   },
   "youtubeCtaBody": {
     "message": "Extensões do Chrome não podem baixar vídeos do YouTube — mas o AutoClipper corta, legenda e baixa para você. Teste grátis."
+  },
+  "historyTitle": {
+    "message": "Downloads recentes"
+  },
+  "historyEmpty": {
+    "message": "Seus downloads aparecerão aqui."
+  },
+  "historyClear": {
+    "message": "Limpar"
+  },
+  "openFile": {
+    "message": "Mostrar na pasta"
+  },
+  "redownload": {
+    "message": "Baixar de novo"
+  },
+  "reviewPromptTitle": {
+    "message": "Curtindo o AutoClipper Downloader?"
+  },
+  "reviewPromptBody": {
+    "message": "Uma avaliação rápida na Chrome Web Store ajuda muito."
+  },
+  "reviewPromptRate": {
+    "message": "Avaliar ★"
+  },
+  "reviewPromptDismiss": {
+    "message": "Talvez depois"
   },
   "poweredBy": {
     "message": "Feito pelo AutoClipper — transforme vídeos em cortes virais →"

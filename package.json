@@ -17,6 +17,7 @@
     "zip": "npm run build && cd dist && zip -r ../autoclipper-download-extension.zip ."
   },
   "dependencies": {
+    "mp4box": "^0.5.4",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   },

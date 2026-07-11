@@ -1,6 +1,18 @@
 # AutoClipper Video Downloader — Chrome Extension
 
-Chrome (MV3) extension that downloads videos from **Instagram, TikTok, Reddit and X (Twitter)** in one click, branded [AutoClipper](https://autoclipper.live). On **YouTube** it shows a "clip it with AutoClipper" call-to-action instead of downloading (Chrome Web Store policy forbids YouTube downloads).
+Chrome (MV3) extension that downloads videos from **Instagram, TikTok, Reddit, X (Twitter) and Twitch clips** in one click, branded [AutoClipper](https://autoclipper.live). On **YouTube** it shows a "clip it with AutoClipper" call-to-action instead of downloading (Chrome Web Store policy forbids YouTube downloads).
+
+## Features
+
+- **One-click downloads** from Instagram, TikTok, Reddit, X and Twitch clips (client-side; no server).
+- **Quality picker** — pick from every rendition the site exposes (Reddit permutations, X bitrates, Instagram versions, Twitch qualities).
+- **Reddit audio muxing** — separate DASH/CMAF video + audio tracks are fetched and muxed into one MP4 in an offscreen document (mp4box.js). Falls back to a video-only + separate-audio download if muxing fails.
+- **Send to AutoClipper** — every detected video (and long-form YouTube pages) links into the app at `/projects?video=<url>` to turn it into captioned clips.
+- **Sign-in status** — the popup greets AutoClipper users (read from app.autoclipper.live localStorage, never the token) or offers a login button.
+- **Download history** in the popup, with "show in folder" and re-download.
+- **Review prompt** after a few successful downloads (once the store id is set).
+- **Install / uninstall pages** on the GitHub Pages site for onboarding and uninstall feedback.
+- **Localized** in English, Portuguese (BR) and Spanish.
 
 Landing page (GitHub Pages, served from `docs/`): https://auto-clipper.github.io/autoclipper-download-extension/
 
@@ -9,7 +21,8 @@ Landing page (GitHub Pages, served from `docs/`): https://auto-clipper.github.io
 - A **MAIN-world interceptor** (`src/interceptor/`) observes `fetch`/XHR JSON responses on Instagram, TikTok and X — these sites only expose real MP4 URLs inside API payloads (the `<video>` tags use `blob:` URLs).
 - **Providers** (`src/providers/`) are pure extractor functions that fish media descriptors out of those payloads. One module per site, unit-tested against fixtures in `tests/fixtures/`.
 - The **content script** (`src/content/`) merges detections, renders the floating panel (shadow DOM, closed root) and relays items to the background worker. Reddit is handled here by fetching the post's public `<permalink>.json`. TikTok's server-rendered first video is read from the `__UNIVERSAL_DATA_FOR_REHYDRATION__` script tag.
-- The **background service worker** (`src/background/`) stores detected media per tab in `chrome.storage.session`, sets the badge count and performs downloads via `chrome.downloads` (browser downloads carry the user's cookies, which signed CDN URLs often require).
+- The **background service worker** (`src/background/`) stores detected media per tab in `chrome.storage.session`, sets the badge count, performs downloads via `chrome.downloads` (browser downloads carry the user's cookies, which signed CDN URLs often require), maintains the download history, tracks the review-prompt counter, and opens the install page / sets the uninstall URL.
+- The **offscreen document** (`src/offscreen/`) fetches and muxes Reddit's separate video + audio tracks into one MP4 (`src/lib/mux.ts`, mp4box.js). The MV3 service worker can't create blob URLs, so muxing lives here; the resulting `blob:` URL is handed to `chrome.downloads`.
 - The **popup** (`src/popup/`, React + Tailwind) mirrors the panel for the active tab.
 
 Files are saved to `Downloads/autoclipper/<provider>-<title-or-id>.mp4`.

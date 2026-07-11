@@ -14,5 +14,12 @@ export default defineConfig({
   },
   build: {
     target: 'chrome111',
+    rollupOptions: {
+      // Offscreen document isn't referenced from the manifest, so declare it
+      // as an explicit build input for CRXJS to bundle it and its TS.
+      input: {
+        offscreen: 'src/offscreen/index.html',
+      },
+    },
   },
 });

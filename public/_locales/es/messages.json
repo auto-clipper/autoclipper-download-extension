@@ -1,0 +1,77 @@
+{
+  "extName": {
+    "message": "AutoClipper Descargar Vídeos — Instagram, TikTok, Reddit, X"
+  },
+  "extDescription": {
+    "message": "Descarga vídeos de Instagram, TikTok, Reddit, X y Twitch en un clic. Gratis, rápido y sin marca de agua añadida. Por autoclipper.live."
+  },
+  "downloadVideo": {
+    "message": "Descargar vídeo"
+  },
+  "downloadAudio": {
+    "message": "Pista de audio"
+  },
+  "downloading": {
+    "message": "Descargando…"
+  },
+  "saved": {
+    "message": "Guardado ✓"
+  },
+  "downloadError": {
+    "message": "Falló — inténtalo de nuevo"
+  },
+  "noVideosFound": {
+    "message": "Aún no se detectaron vídeos en esta página. Abre una publicación o reproduce un vídeo y aparecerá aquí."
+  },
+  "sendToAutoclipperTitle": {
+    "message": "Enviar a AutoClipper"
+  },
+  "sendToAutoclipperShort": {
+    "message": "Enviar a AutoClipper"
+  },
+  "sendToAutoclipperBody": {
+    "message": "Abre este vídeo en AutoClipper y conviértelo en clips virales con subtítulos, automáticamente."
+  },
+  "loginWithAutoclipper": {
+    "message": "Iniciar sesión con AutoClipper"
+  },
+  "loggedInAs": {
+    "message": "Conectado como $1"
+  },
+  "youtubeCtaTitle": {
+    "message": "Convierte este vídeo en clips virales"
+  },
+  "youtubeCtaBody": {
+    "message": "Las extensiones de Chrome no pueden descargar vídeos de YouTube — pero AutoClipper los recorta, subtitula y descarga por ti. Pruébalo gratis."
+  },
+  "historyTitle": {
+    "message": "Descargas recientes"
+  },
+  "historyEmpty": {
+    "message": "Tus descargas aparecerán aquí."
+  },
+  "historyClear": {
+    "message": "Limpiar"
+  },
+  "openFile": {
+    "message": "Mostrar en carpeta"
+  },
+  "redownload": {
+    "message": "Descargar de nuevo"
+  },
+  "reviewPromptTitle": {
+    "message": "¿Te gusta AutoClipper Downloader?"
+  },
+  "reviewPromptBody": {
+    "message": "Una valoración rápida en la Chrome Web Store ayuda mucho."
+  },
+  "reviewPromptRate": {
+    "message": "Valorar ★"
+  },
+  "reviewPromptDismiss": {
+    "message": "Quizás luego"
+  },
+  "poweredBy": {
+    "message": "Hecho por AutoClipper — convierte vídeos en clips virales →"
+  }
+}

@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Welcome to AutoClipper Video Downloader</title>
+  <meta name="robots" content="noindex" />
+  <link rel="icon" type="image/png" href="assets/icon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600;700&family=Instrument+Sans:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .welcome { max-width: 720px; padding: 56px 0 80px; position: relative; z-index: 1; }
+    .welcome h1 { font-size: clamp(30px, 5vw, 44px); margin: 18px 0 12px; }
+    .welcome .lead { color: var(--muted); font-size: 18px; max-width: 52ch; }
+    .steps-list { display: grid; gap: 14px; margin: 40px 0; counter-reset: s; }
+    .step-card {
+      display: flex; gap: 16px; align-items: flex-start; padding: 20px 22px;
+      background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+    }
+    .step-card .n {
+      counter-increment: s; flex-shrink: 0;
+      width: 34px; height: 34px; border-radius: 10px;
+      background: var(--grad); color: #0b0d11; font-family: var(--font-display);
+      font-weight: 700; display: flex; align-items: center; justify-content: center;
+    }
+    .step-card .n::before { content: counter(s); }
+    .step-card h3 { font-family: var(--font-display); font-size: 16px; margin-bottom: 4px; }
+    .step-card p { color: var(--muted); font-size: 14.5px; }
+    .pin { color: var(--lime); font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="glow glow-lime"></div>
+  <div class="glow glow-cyan"></div>
+  <div class="wrap">
+    <header>
+      <a class="brand" href="./"><img src="assets/icon.png" alt="AutoClipper Video Downloader logo" />AutoClipper <em>DL</em></a>
+      <a class="lang-switch" href="https://autoclipper.live/?utm_source=chrome-extension&amp;utm_medium=welcome-header">autoclipper.live →</a>
+    </header>
+
+    <section class="welcome">
+      <span class="eyebrow">Installed 🎉</span>
+      <h1>You're all set to <span class="grad">download &amp; clip.</span></h1>
+      <p class="lead">Three quick things and you'll never paste a link into a sketchy converter site again.</p>
+
+      <div class="steps-list">
+        <div class="step-card">
+          <div class="n"></div>
+          <div>
+            <h3>Pin the extension</h3>
+            <p>Click the puzzle-piece icon in Chrome's toolbar and hit the pin next to AutoClipper, so the button is always one click away.</p>
+          </div>
+        </div>
+        <div class="step-card">
+          <div class="n"></div>
+          <div>
+            <h3>Open a video</h3>
+            <p>Browse Instagram, TikTok, Reddit, X or Twitch as usual. When a video is detected, the <span class="pin">AutoClipper button</span> appears in the corner — click <strong>Download</strong>.</p>
+          </div>
+        </div>
+        <div class="step-card">
+          <div class="n"></div>
+          <div>
+            <h3>Turn it into clips</h3>
+            <p>On a long YouTube video, hit <strong>Send to AutoClipper</strong> to cut it into captioned, ready-to-post viral clips automatically.</p>
+          </div>
+        </div>
+      </div>
+
+      <a class="btn btn-primary" href="https://autoclipper.live/?utm_source=chrome-extension&amp;utm_medium=welcome-cta">Explore AutoClipper</a>
+    </section>
+
+    <footer>
+      <div class="foot-row">
+        <div>
+          <a href="https://autoclipper.live">autoclipper.live</a>
+          <a href="privacy.html">Privacy policy</a>
+          <a href="https://github.com/auto-clipper/autoclipper-download-extension">GitHub</a>
+        </div>
+        <div>© 2026 AutoClipper</div>
+      </div>
+    </footer>
+  </div>
+</body>
+</html>

@@ -1,9 +1,13 @@
-import type { DownloadStatus, MediaItem } from '@/shared/types';
+import type { DownloadMeta, DownloadStatus, MediaItem } from '@/shared/types';
 
 interface PanelOptions {
   mode: 'download' | 'youtube';
-  onDownload: (url: string, filename: string) => void;
+  onDownload: (url: string, filename: string, meta?: DownloadMeta) => void;
 }
+
+const APP_SEND_URL = (pageUrl: string) =>
+  `https://app.autoclipper.live/projects?video=${encodeURIComponent(pageUrl)}` +
+  `&utm_source=chrome-extension&utm_medium=panel-send`;
 
 interface Panel {
   setItems(items: MediaItem[]): void;
@@ -65,13 +69,21 @@ const STYLES = `
   .meta { flex: 1; min-width: 0; }
   .title { font-size: 12.5px; line-height: 1.35; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
   .sub { font-size: 11px; color: #8a93a3; margin-top: 2px; }
-  .actions { margin-top: 8px; display: flex; gap: 6px; flex-wrap: wrap; }
+  .actions { margin-top: 8px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
   .btn {
     border: none; border-radius: 8px; padding: 6px 12px; font-size: 12px; font-weight: 700;
     cursor: pointer; background: #bfff00; color: #0b0d11;
   }
   .btn.secondary { background: #23262e; color: #f4f7fb; }
+  .btn.send {
+    background: transparent; color: #00e5ff; border: 1px solid rgba(0,229,255,0.4);
+    display: inline-flex; align-items: center; gap: 4px;
+  }
   .btn:hover { filter: brightness(1.1); }
+  .quality {
+    background: #1a1d24; color: #f4f7fb; border: 1px solid #23262e; border-radius: 8px;
+    padding: 6px 8px; font-size: 12px; font-weight: 600; cursor: pointer;
+  }
   .btn:disabled { opacity: 0.75; cursor: default; }
   .btn.done { background: #23262e; color: #bfff00; }
   .btn.failed { background: #2e2326; color: #ff6b6b; }
@@ -216,14 +228,47 @@ export function createPanel(options: PanelOptions): Panel {
 
         const actions = document.createElement('div');
         actions.className = 'actions';
+
+        // Quality picker: the download button tracks the selected variant.
+        const variants = item.variants?.filter((v) => v.url) ?? [];
+        let selectedUrl = item.url;
+
+        const downloadMeta: DownloadMeta = {
+          provider: item.provider,
+          title: item.title,
+          pageUrl: item.pageUrl,
+          // Reddit fallback path: mux the separate audio track in.
+          audioUrl: item.audioUrl,
+        };
+
         const dl = document.createElement('button');
         dl.className = 'btn';
-        dl.dataset.url = item.url;
+        dl.dataset.url = selectedUrl;
         dl.dataset.idleLabel = t('downloadVideo');
-        applyStatus(dl, item.url, t('downloadVideo'));
-        dl.addEventListener('click', () => options.onDownload(item.url, item.filename));
+        applyStatus(dl, selectedUrl, t('downloadVideo'));
+        dl.addEventListener('click', () =>
+          options.onDownload(selectedUrl, item.filename, downloadMeta),
+        );
         actions.appendChild(dl);
 
+        if (variants.length > 1) {
+          const select = document.createElement('select');
+          select.className = 'quality';
+          for (const variant of variants) {
+            const opt = document.createElement('option');
+            opt.value = variant.url;
+            opt.textContent = variant.quality ?? t('downloadVideo');
+            select.appendChild(opt);
+          }
+          select.addEventListener('change', () => {
+            selectedUrl = select.value;
+            dl.dataset.url = selectedUrl;
+            applyStatus(dl, selectedUrl, t('downloadVideo'));
+          });
+          actions.appendChild(select);
+        }
+
+        // Reddit separate-audio manual fallback (mux is automatic above).
         if (item.audioUrl) {
           const audio = document.createElement('button');
           audio.className = 'btn secondary';
@@ -235,6 +280,16 @@ export function createPanel(options: PanelOptions): Panel {
           );
           actions.appendChild(audio);
         }
+
+        // Send to AutoClipper: process this video into clips in the app.
+        const send = document.createElement('a');
+        send.className = 'btn send';
+        send.href = APP_SEND_URL(item.pageUrl);
+        send.target = '_blank';
+        send.rel = 'noopener';
+        send.textContent = t('sendToAutoclipperShort');
+        actions.appendChild(send);
+
         meta.appendChild(actions);
         row.appendChild(meta);
         panel.appendChild(row);

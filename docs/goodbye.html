@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sorry to see you go — AutoClipper Video Downloader</title>
+  <meta name="robots" content="noindex" />
+  <link rel="icon" type="image/png" href="assets/icon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600;700&family=Instrument+Sans:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .bye { max-width: 620px; padding: 72px 0 80px; position: relative; z-index: 1; }
+    .bye h1 { font-size: clamp(28px, 4.5vw, 40px); margin: 16px 0 12px; }
+    .bye p { color: var(--muted); font-size: 17px; max-width: 50ch; }
+    .reasons { display: grid; gap: 10px; margin: 32px 0; }
+    .reasons a {
+      display: block; padding: 15px 18px; border-radius: 12px; text-decoration: none;
+      background: var(--card); border: 1px solid var(--border); color: var(--text);
+      font-size: 14.5px; transition: border-color 0.2s ease, transform 0.15s ease;
+    }
+    .reasons a:hover { border-color: rgba(191,255,0,0.5); transform: translateY(-2px); }
+    .note { font-size: 13px; color: #5c6470; margin-top: 24px; }
+  </style>
+</head>
+<body>
+  <div class="glow glow-cyan"></div>
+  <div class="wrap">
+    <header>
+      <a class="brand" href="./"><img src="assets/icon.png" alt="AutoClipper Video Downloader logo" />AutoClipper <em>DL</em></a>
+    </header>
+
+    <section class="bye">
+      <span class="eyebrow">Uninstalled</span>
+      <h1>Sorry to see you go.</h1>
+      <p>If you have 5 seconds, what made you remove it? Your answer goes to the GitHub issue tracker and genuinely shapes what we fix next.</p>
+
+      <div class="reasons">
+        <a href="https://github.com/auto-clipper/autoclipper-download-extension/issues/new?title=Feedback%3A+didn%27t+work+on+a+site&labels=uninstall-feedback">It didn't work on a site I needed</a>
+        <a href="https://github.com/auto-clipper/autoclipper-download-extension/issues/new?title=Feedback%3A+downloads+failed&labels=uninstall-feedback">Downloads kept failing</a>
+        <a href="https://github.com/auto-clipper/autoclipper-download-extension/issues/new?title=Feedback%3A+missing+a+feature&labels=uninstall-feedback">It was missing a feature I wanted</a>
+        <a href="https://github.com/auto-clipper/autoclipper-download-extension/issues/new?title=Feedback%3A+other&labels=uninstall-feedback">Something else</a>
+      </div>
+
+      <p class="note">Changed your mind? You can reinstall anytime from the Chrome Web Store. And AutoClipper still turns your long videos into viral clips at <a href="https://autoclipper.live/?utm_source=chrome-extension&amp;utm_medium=goodbye">autoclipper.live</a>.</p>
+    </section>
+
+    <footer>
+      <div class="foot-row">
+        <div>
+          <a href="https://autoclipper.live">autoclipper.live</a>
+          <a href="./">Home</a>
+          <a href="https://github.com/auto-clipper/autoclipper-download-extension">GitHub</a>
+        </div>
+        <div>© 2026 AutoClipper</div>
+      </div>
+    </footer>
+  </div>
+</body>
+</html>

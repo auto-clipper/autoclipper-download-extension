@@ -28,11 +28,16 @@ export const twitter: Provider = {
       const info = obj.video_info;
       if (!info || !Array.isArray(info.variants)) return;
 
-      const best = info.variants
+      const mp4s = info.variants
         .filter((v: any) => v?.content_type === 'video/mp4' && typeof v.url === 'string')
-        .sort((a: any, b: any) => (b.bitrate ?? 0) - (a.bitrate ?? 0))[0];
+        .sort((a: any, b: any) => (b.bitrate ?? 0) - (a.bitrate ?? 0));
+      const best = mp4s[0];
       if (!best || seen.has(best.url)) return;
       seen.add(best.url);
+      const variants = mp4s.map((v: any) => ({
+        url: v.url,
+        quality: /\/(\d+x\d+)\//.exec(v.url)?.[1] ?? (v.bitrate ? `${Math.round(v.bitrate / 1000)}kbps` : undefined),
+      }));
 
       const idMatch = /\/(?:amplify_video|ext_tw_video|tweet_video)\/(\d+)\//.exec(best.url);
       const id = obj.id_str ?? idMatch?.[1] ?? best.url.slice(-24);
@@ -45,6 +50,7 @@ export const twitter: Provider = {
         pageUrl,
         thumbnail,
         quality: best.bitrate ? `${Math.round(best.bitrate / 1000)}kbps` : undefined,
+        variants,
         filename: buildFilename('twitter', undefined, String(id)),
       });
     });

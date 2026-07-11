@@ -7,6 +7,9 @@ const SOCIAL_MATCHES = [
   'https://tiktok.com/*',
   'https://twitter.com/*',
   'https://x.com/*',
+  'https://www.twitch.tv/*',
+  'https://m.twitch.tv/*',
+  'https://clips.twitch.tv/*',
 ];
 
 const REDDIT_MATCHES = [
@@ -25,7 +28,7 @@ export default defineManifest({
   short_name: 'AutoClipper DL',
   description: '__MSG_extDescription__',
   default_locale: 'en',
-  version: '0.2.0',
+  version: '0.3.0',
   minimum_chrome_version: '111',
   homepage_url: 'https://autoclipper.live',
   icons: {
@@ -66,5 +69,5 @@ export default defineManifest({
       run_at: 'document_idle',
     },
   ],
-  permissions: ['downloads', 'storage'],
+  permissions: ['downloads', 'storage', 'offscreen'],
 });

@@ -27,11 +27,11 @@ function isStaleContext(error: unknown): boolean {
 
 const panel = createPanel({
   mode: isYouTube ? 'youtube' : 'download',
-  onDownload: (url, filename) => {
+  onDownload: (url, filename, meta) => {
     panel.setStatus(url, 'downloading');
     try {
       chrome.runtime
-        .sendMessage({ type: 'download', url, filename })
+        .sendMessage({ type: 'download', url, filename, now: Date.now(), meta })
         .then((response: DownloadResponse | undefined) => {
           // Only an explicit rejection means the download failed to start.
           // An undefined response is a messaging anomaly — the download is

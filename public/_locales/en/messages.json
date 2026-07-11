@@ -3,7 +3,7 @@
     "message": "AutoClipper Video Downloader — Instagram, TikTok, Reddit, X"
   },
   "extDescription": {
-    "message": "Download videos from Instagram, TikTok, Reddit and X in one click. Free, fast and no watermarks added. By autoclipper.live."
+    "message": "Download videos from Instagram, TikTok, Reddit, X and Twitch in one click. Free, fast and no watermarks added. By autoclipper.live."
   },
   "downloadVideo": {
     "message": "Download video"
@@ -26,6 +26,9 @@
   "sendToAutoclipperTitle": {
     "message": "Send to AutoClipper"
   },
+  "sendToAutoclipperShort": {
+    "message": "Send to AutoClipper"
+  },
   "sendToAutoclipperBody": {
     "message": "Open this video in AutoClipper and turn it into viral clips with captions — automatically."
   },
@@ -40,6 +43,33 @@
   },
   "youtubeCtaBody": {
     "message": "Chrome extensions can't download YouTube videos — but AutoClipper can clip, caption and download them for you. Free to try."
+  },
+  "historyTitle": {
+    "message": "Recent downloads"
+  },
+  "historyEmpty": {
+    "message": "Your downloads will appear here."
+  },
+  "historyClear": {
+    "message": "Clear"
+  },
+  "openFile": {
+    "message": "Show in folder"
+  },
+  "redownload": {
+    "message": "Download again"
+  },
+  "reviewPromptTitle": {
+    "message": "Enjoying AutoClipper Downloader?"
+  },
+  "reviewPromptBody": {
+    "message": "A quick rating on the Chrome Web Store helps a lot."
+  },
+  "reviewPromptRate": {
+    "message": "Rate it ★"
+  },
+  "reviewPromptDismiss": {
+    "message": "Maybe later"
   },
   "poweredBy": {
     "message": "Powered by AutoClipper — turn videos into viral clips →"

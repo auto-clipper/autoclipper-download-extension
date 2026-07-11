@@ -95,12 +95,13 @@ export function extractFromPackagedMedia(
   const permutations = parsed?.playbackMp4s?.permutations;
   if (!Array.isArray(permutations) || permutations.length === 0) return null;
 
-  const best = [...permutations]
+  const sorted = [...permutations]
     .filter((p: any) => typeof p?.source?.url === 'string')
     .sort(
       (a: any, b: any) =>
         (b.source.dimensions?.height ?? 0) - (a.source.dimensions?.height ?? 0),
-    )[0];
+    );
+  const best = sorted[0];
   if (!best) return null;
 
   const url: string = best.source.url;
@@ -114,6 +115,10 @@ export function extractFromPackagedMedia(
     pageUrl: meta.permalink ? `https://www.reddit.com${meta.permalink}` : meta.pageUrl,
     title: meta.title,
     quality: best.source.dimensions?.height ? `${best.source.dimensions.height}p` : undefined,
+    variants: sorted.map((p: any) => ({
+      url: p.source.url,
+      quality: p.source.dimensions?.height ? `${p.source.dimensions.height}p` : undefined,
+    })),
     filename: buildFilename('reddit', meta.title, id),
   };
 }

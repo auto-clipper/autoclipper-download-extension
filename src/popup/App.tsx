@@ -2,18 +2,20 @@ import { useEffect, useState } from 'react';
 import type {
   AuthUser,
   BackgroundMessage,
+  DownloadMeta,
   DownloadResponse,
   DownloadStatus,
   MediaItem,
 } from '@/shared/types';
+import { APP_URL, SITE_URL } from '@/shared/constants';
+import { t, safeHostname, safePathname, sendToAppUrl } from './helpers';
+import { MediaRow } from './MediaRow';
+import { DownloadHistory } from './DownloadHistory';
+import { ReviewPrompt } from './ReviewPrompt';
 
-const t = (key: string, subs?: string[]) => chrome.i18n.getMessage(key, subs) || key;
-
-const SITE_URL = 'https://autoclipper.live/?utm_source=chrome-extension&utm_medium=popup';
-const APP_URL = 'https://app.autoclipper.live';
+const POWERED_URL = `${SITE_URL}/?utm_source=chrome-extension&utm_medium=popup`;
 const LOGIN_URL = `${APP_URL}/login?redirect=%2Fprojects&utm_source=chrome-extension&utm_medium=popup-login`;
-
-const SUPPORTED_HINT = 'Instagram · TikTok · X · Reddit';
+const SUPPORTED_HINT = 'Instagram · TikTok · X · Reddit · Twitch';
 
 export function App() {
   const [items, setItems] = useState<MediaItem[]>([]);
@@ -55,9 +57,8 @@ export function App() {
 
   const isYouTube = /(^|\.)youtube\.com$/.test(safeHostname(pageUrl));
   const isWatchPage = isYouTube && /\/watch\b|\/live\//.test(safePathname(pageUrl));
-  const sendToAppUrl = `${APP_URL}/projects?video=${encodeURIComponent(pageUrl)}&utm_source=chrome-extension&utm_medium=popup-send`;
 
-  const download = (url: string, filename: string) => {
+  const download = (url: string, filename: string, meta: DownloadMeta) => {
     setStatuses((prev) => ({ ...prev, [url]: 'downloading' }));
     const resetIfDownloading = () =>
       setStatuses((prev) => {
@@ -67,7 +68,7 @@ export function App() {
         return next;
       });
     chrome.runtime
-      .sendMessage({ type: 'download', url, filename })
+      .sendMessage({ type: 'download', url, filename, now: Date.now(), meta })
       .then((response: DownloadResponse | undefined) => {
         // Only an explicit rejection means the download failed to start;
         // otherwise download-status events settle the outcome.
@@ -80,24 +81,9 @@ export function App() {
       .catch(() => setTimeout(resetIfDownloading, 20_000));
   };
 
-  const buttonLabel = (url: string, idle: string) => {
-    const status = statuses[url];
-    if (status === 'downloading') {
-      return (
-        <>
-          <span className="inline-block h-2.5 w-2.5 animate-spin rounded-full border-2 border-current/30 border-t-current align-[-1px]" />{' '}
-          {t('downloading')}
-        </>
-      );
-    }
-    if (status === 'complete') return t('saved');
-    if (status === 'interrupted') return t('downloadError');
-    return idle;
-  };
-
   return (
     <div className="w-[360px] bg-[#0b0d11] text-[#f4f7fb] font-sans">
-      <header className="flex items-center gap-2 px-4 py-3 border-b border-[#23262e]">
+      <header className="flex items-center gap-2 border-b border-[#23262e] px-4 py-3">
         <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-[#bfff00] to-[#00e5ff]">
           <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none">
             <path
@@ -115,12 +101,14 @@ export function App() {
         </h1>
       </header>
 
-      <main className="max-h-[380px] overflow-y-auto">
+      <main className="max-h-[420px] overflow-y-auto">
+        <ReviewPrompt />
+
         {loading ? (
           <p className="px-4 py-6 text-xs text-[#8a93a3]">…</p>
         ) : isWatchPage ? (
           <a
-            href={sendToAppUrl}
+            href={sendToAppUrl(pageUrl, 'popup-send')}
             target="_blank"
             rel="noopener"
             className="m-4 block rounded-xl border border-[#bfff00]/40 bg-gradient-to-br from-[#bfff00]/10 to-[#00e5ff]/10 p-4 text-xs leading-relaxed no-underline"
@@ -131,7 +119,7 @@ export function App() {
           </a>
         ) : isYouTube ? (
           <a
-            href={`https://autoclipper.live/?utm_source=chrome-extension&utm_medium=popup-youtube&video=${encodeURIComponent(pageUrl)}`}
+            href={`${SITE_URL}/?utm_source=chrome-extension&utm_medium=popup-youtube&video=${encodeURIComponent(pageUrl)}`}
             target="_blank"
             rel="noopener"
             className="m-4 block rounded-xl border border-[#bfff00]/40 bg-gradient-to-br from-[#bfff00]/10 to-[#00e5ff]/10 p-4 text-xs leading-relaxed no-underline"
@@ -148,46 +136,18 @@ export function App() {
         ) : (
           <ul className="divide-y divide-[#1a1d24]">
             {items.map((item) => (
-              <li key={item.id} className="flex gap-3 px-4 py-3">
-                {item.thumbnail && (
-                  <img
-                    src={item.thumbnail}
-                    alt=""
-                    className="h-12 w-12 flex-shrink-0 rounded-lg bg-[#1a1d24] object-cover"
-                  />
-                )}
-                <div className="min-w-0 flex-1">
-                  <p className="line-clamp-2 text-xs leading-snug">
-                    {item.title || item.pageUrl}
-                  </p>
-                  <p className="mt-0.5 text-[11px] text-[#8a93a3]">
-                    {[item.provider, item.quality].filter(Boolean).join(' · ')}
-                  </p>
-                  <div className="mt-2 flex flex-wrap gap-1.5">
-                    <button
-                      onClick={() => download(item.url, item.filename)}
-                      disabled={statuses[item.url] === 'downloading'}
-                      className="cursor-pointer rounded-lg bg-[#bfff00] px-3 py-1.5 text-xs font-bold text-[#0b0d11] hover:brightness-110 disabled:cursor-default disabled:opacity-75"
-                    >
-                      {buttonLabel(item.url, t('downloadVideo'))}
-                    </button>
-                    {item.audioUrl && (
-                      <button
-                        onClick={() =>
-                          download(item.audioUrl!, item.filename.replace(/\.mp4$/, '-audio.mp4'))
-                        }
-                        disabled={statuses[item.audioUrl] === 'downloading'}
-                        className="cursor-pointer rounded-lg bg-[#23262e] px-3 py-1.5 text-xs font-bold hover:brightness-125 disabled:cursor-default disabled:opacity-75"
-                      >
-                        {buttonLabel(item.audioUrl, t('downloadAudio'))}
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </li>
+              <MediaRow
+                key={item.id}
+                item={item}
+                status={statuses[item.url]}
+                audioStatus={item.audioUrl ? statuses[item.audioUrl] : undefined}
+                onDownload={download}
+              />
             ))}
           </ul>
         )}
+
+        <DownloadHistory />
       </main>
 
       <footer className="border-t border-[#23262e] px-4 py-3">
@@ -218,7 +178,7 @@ export function App() {
           )}
         </div>
         <a
-          href={SITE_URL}
+          href={POWERED_URL}
           target="_blank"
           rel="noopener"
           className="text-xs font-semibold text-[#00e5ff] no-underline hover:underline"
@@ -228,20 +188,4 @@ export function App() {
       </footer>
     </div>
   );
-}
-
-function safeHostname(url: string): string {
-  try {
-    return new URL(url).hostname;
-  } catch {
-    return '';
-  }
-}
-
-function safePathname(url: string): string {
-  try {
-    return new URL(url).pathname;
-  } catch {
-    return '';
-  }
 }

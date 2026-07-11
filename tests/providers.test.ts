@@ -4,6 +4,7 @@ import { instagram } from '@/providers/instagram';
 import { tiktok } from '@/providers/tiktok';
 import { twitter } from '@/providers/twitter';
 import { reddit, redditAudioUrl, extractFromPackagedMedia } from '@/providers/reddit';
+import { twitch } from '@/providers/twitch';
 import { providerForHost } from '@/providers/registry';
 import { sanitizeFilename, buildFilename } from '@/shared/walk';
 
@@ -89,12 +90,49 @@ describe('reddit', () => {
   });
 });
 
+describe('twitch', () => {
+  it('builds authenticated clip URLs from the access-token payload', () => {
+    const items = twitch.extractFromJson(
+      fixture('twitch-clip-token.json'),
+      'https://www.twitch.tv/somechannel/clip/GentleFuriousPanda-abc123',
+    );
+    expect(items).toHaveLength(1);
+    expect(items[0].url).toContain('AT-cm%7C999-1080.mp4?sig=d2b47f4a1c&token=');
+    expect(items[0].url).toContain(encodeURIComponent('"forbidden":false'));
+    expect(items[0].id).toBe('twitch:GentleFuriousPanda-abc123');
+    expect(items[0].quality).toBe('1080p');
+    expect(items[0].variants).toHaveLength(3);
+    expect(items[0].variants![1].quality).toBe('720p');
+  });
+
+  it('returns [] without a playback token', () => {
+    expect(twitch.extractFromJson('{"data":{"clip":{"videoQualities":[]}}}', 'x')).toEqual([]);
+  });
+});
+
+describe('variants', () => {
+  it('instagram exposes all video versions as variants', () => {
+    const items = instagram.extractFromJson(fixture('instagram-reel.json'), 'x');
+    expect(items[0].variants).toHaveLength(2);
+    expect(items[0].variants![1].quality).toBe('480x854');
+  });
+
+  it('reddit packaged media exposes all permutations as variants, best first', () => {
+    const item = extractFromPackagedMedia(fixture('reddit-packaged-media.json'), { pageUrl: 'x' });
+    expect(item!.variants).toHaveLength(3);
+    expect(item!.variants![0].quality).toBe('1080p');
+    expect(item!.variants![2].quality).toBe('240p');
+  });
+});
+
 describe('registry', () => {
   it('maps hostnames to providers', () => {
     expect(providerForHost('www.instagram.com')?.id).toBe('instagram');
     expect(providerForHost('x.com')?.id).toBe('twitter');
     expect(providerForHost('twitter.com')?.id).toBe('twitter');
     expect(providerForHost('old.reddit.com')?.id).toBe('reddit');
+    expect(providerForHost('www.twitch.tv')?.id).toBe('twitch');
+    expect(providerForHost('clips.twitch.tv')?.id).toBe('twitch');
     expect(providerForHost('www.youtube.com')).toBeUndefined();
     expect(providerForHost('evil-instagram.com.attacker.net')).toBeUndefined();
   });

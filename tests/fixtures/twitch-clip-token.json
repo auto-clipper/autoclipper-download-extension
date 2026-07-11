@@ -1,0 +1,29 @@
+{
+  "data": {
+    "clip": {
+      "id": "ClipID123",
+      "playbackAccessToken": {
+        "signature": "d2b47f4a1c",
+        "value": "{\"authorization\":{\"forbidden\":false},\"clip_uri\":\"\",\"device_id\":\"x\",\"expires\":1789999999,\"user_id\":\"\",\"version\":2}"
+      },
+      "videoQualities": [
+        {
+          "frameRate": 30,
+          "quality": "480",
+          "sourceURL": "https://production.assets.clips.twitchcdn.net/v2/media/GentleFuriousPanda/AT-cm%7C999-480.mp4"
+        },
+        {
+          "frameRate": 60,
+          "quality": "1080",
+          "sourceURL": "https://production.assets.clips.twitchcdn.net/v2/media/GentleFuriousPanda/AT-cm%7C999-1080.mp4"
+        },
+        {
+          "frameRate": 60,
+          "quality": "720",
+          "sourceURL": "https://production.assets.clips.twitchcdn.net/v2/media/GentleFuriousPanda/AT-cm%7C999-720.mp4"
+        }
+      ]
+    }
+  },
+  "extensions": { "operationName": "VideoAccessToken_Clip" }
+}

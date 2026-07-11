@@ -15,8 +15,12 @@ Download videos from your favorite social networks in one click — right from t
 ⬇️ SUPPORTED SITES
 • Instagram — Reels, feed videos and stories
 • TikTok — videos from the feed or video pages
-• Reddit — v.redd.it videos (audio track available separately)
+• Reddit — v.redd.it videos with audio muxed in automatically
 • X (Twitter) — tweet videos in the highest available quality
+• Twitch — clips in up to 1080p
+
+✨ PICK YOUR QUALITY
+Choose exactly which resolution to save — from 360p up to the highest the site offers.
 
 ▶️ HOW IT WORKS
 1. Browse Instagram, TikTok, Reddit or X normally
@@ -41,7 +45,7 @@ Productivity → Tools
 
 ## Keywords / search terms
 
-video downloader, download instagram video, download tiktok video, tiktok no watermark, download reddit video, download twitter video, download x video, save video, baixar video
+video downloader, download instagram video, download tiktok video, tiktok no watermark, download reddit video, download twitter video, download x video, download twitch clip, save video, baixar video
 
 ## URLs
 

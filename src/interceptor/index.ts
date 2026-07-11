@@ -9,7 +9,14 @@ import type { InterceptorPayload } from '@/shared/types';
  */
 
 /** Cheap pre-filter so we only ship bodies that can contain video descriptors. */
-const BODY_MARKERS = ['video_versions', 'video_url', 'playAddr', 'downloadAddr', 'video_info'];
+const BODY_MARKERS = [
+  'video_versions',
+  'video_url',
+  'playAddr',
+  'downloadAddr',
+  'video_info',
+  'videoQualities',
+];
 
 const MAX_BODY_BYTES = 8 * 1024 * 1024;
 

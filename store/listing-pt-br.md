@@ -15,8 +15,12 @@ Baixe vídeos das suas redes sociais favoritas em um clique — direto da págin
 ⬇️ SITES SUPORTADOS
 • Instagram — Reels, vídeos do feed e stories
 • TikTok — vídeos do feed ou da página do vídeo
-• Reddit — vídeos do v.redd.it (faixa de áudio disponível separadamente)
+• Reddit — vídeos do v.redd.it com áudio já embutido automaticamente
 • X (Twitter) — vídeos de tweets na maior qualidade disponível
+• Twitch — clipes em até 1080p
+
+✨ ESCOLHA A QUALIDADE
+Selecione exatamente qual resolução salvar — de 360p até a melhor que o site oferece.
 
 ▶️ COMO FUNCIONA
 1. Navegue normalmente pelo Instagram, TikTok, Reddit ou X
@@ -41,7 +45,7 @@ Produtividade → Ferramentas
 
 ## Palavras-chave
 
-baixar video instagram, baixar video tiktok, tiktok sem marca d'água, baixar video reddit, baixar video twitter, baixar video x, salvar video, download de video, video downloader
+baixar video instagram, baixar video tiktok, tiktok sem marca d'água, baixar video reddit, baixar video twitter, baixar video x, baixar clipe twitch, salvar video, download de video, video downloader
 
 ## URLs
 

@@ -1,4 +1,4 @@
-import type { MediaItem } from '@/shared/types';
+import type { MediaItem, MediaVariant } from '@/shared/types';
 import { walkJson, buildFilename } from '@/shared/walk';
 import type { Provider } from './types';
 
@@ -30,11 +30,18 @@ export const instagram: Provider = {
       let url: string | undefined;
       let width: number | undefined;
       let height: number | undefined;
+      let variants: MediaVariant[] | undefined;
 
       if (Array.isArray(versions) && versions[0]?.url) {
         url = String(versions[0].url);
         width = versions[0].width;
         height = versions[0].height;
+        variants = versions
+          .filter((v: any) => typeof v?.url === 'string')
+          .map((v: any) => ({
+            url: v.url,
+            quality: v.width && v.height ? `${v.width}x${v.height}` : undefined,
+          }));
       } else if (typeof obj.video_url === 'string' && obj.is_video) {
         url = obj.video_url;
       }
@@ -59,6 +66,7 @@ export const instagram: Provider = {
         title: caption?.split('\n')[0],
         thumbnail: typeof thumbnail === 'string' ? thumbnail : undefined,
         quality: width && height ? `${width}x${height}` : undefined,
+        variants,
         filename: buildFilename('instagram', caption?.split('\n')[0], id),
       });
     });
