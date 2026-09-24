@@ -6,6 +6,10 @@ Chrome (MV3) extension that downloads videos from **Instagram, TikTok, Reddit, X
 
 - **One-click downloads** from Instagram, TikTok, Reddit, X and Twitch clips (client-side; no server).
 - **On-video download button** — hovering a video player shows a "Download" button (plus a "Send to AutoClipper" scissors button) right on the video. Can be turned off from the popup.
+- **Right-click menu** — "Download this video — AutoClipper" on supported sites downloads the video under the cursor (else the one on screen); on YouTube watch pages, "Clip this video with AutoClipper" deep-links into the app.
+- **Keyboard shortcut** — `Alt+Shift+D` downloads the video under the pointer, else the one on screen (rebindable at `chrome://extensions/shortcuts`; the popup shows the current binding).
+- **Download all** — one button in the panel header and the popup downloads every listed video not yet saved.
+- **Movable floating button** — drag it anywhere; hide it per platform from the panel header (eye icon) and bring it back from the popup. Position/visibility are stored per platform in `chrome.storage.local` (`fabPrefs`).
 - **Quality picker** — pick from every rendition the site exposes (Reddit permutations, X bitrates, Instagram versions, Twitch qualities).
 - **Reddit audio muxing** — separate DASH/CMAF video + audio tracks are fetched and muxed into one MP4 in an offscreen document (mp4box.js). Falls back to a video-only + separate-audio download if muxing fails.
 - **Send to AutoClipper** — every detected video (and long-form YouTube pages) links into the app at `/projects?video=<url>` to turn it into captioned clips.
@@ -58,6 +62,10 @@ Load in Chrome: `chrome://extensions` → enable Developer mode → "Load unpack
 - [ ] Reddit: open a v.redd.it post → video downloads; audio button appears when the post has audio
 - [ ] YouTube: panel shows the AutoClipper CTA and links to autoclipper.live with the video URL
 - [ ] Hovering a video shows the on-video Download button; it downloads *that* video (check a feed with several videos on X, Reddit, Instagram and TikTok); it hides behind page modals and when the popup toggle is off
+- [ ] Right-click on a video → "Download this video — AutoClipper" downloads that video (Instagram/TikTok overlays included); on a YouTube watch page the menu offers "Clip this video with AutoClipper"
+- [ ] `Alt+Shift+D` over a video downloads it; away from videos it downloads the one on screen
+- [ ] Drag the floating button to another corner → the panel opens toward the page centre; hide it via the eye icon → bring it back from the popup
+- [ ] "Download all" downloads each listed video once
 - [ ] Popup mirrors the page's detected videos; badge shows the count
 - [ ] Both locales render (`chrome://settings/languages` → move pt-BR to top to test)
 

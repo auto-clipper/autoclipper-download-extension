@@ -64,7 +64,21 @@ export type BackgroundMessage =
   | { type: 'clear-history' }
   | { type: 'download-status'; url: string; status: DownloadStatus; error?: string }
   | { type: 'auth-state'; user: AuthUser | null }
-  | { type: 'clear-media' };
+  | { type: 'clear-media' }
+  /** Background → content: right-click menu / keyboard shortcut fired in this tab. */
+  | { type: 'context-download' }
+  | { type: 'shortcut-download' }
+  /**
+   * Popup → content: which page is this? The popup can't read tab.url —
+   * that needs the "tabs" permission; content-script matches don't grant it.
+   */
+  | { type: 'get-page-info' };
+
+export interface PageInfo {
+  url: string;
+  /** Provider id, or "youtube". */
+  siteKey: string;
+}
 
 export interface DownloadResponse {
   ok: boolean;

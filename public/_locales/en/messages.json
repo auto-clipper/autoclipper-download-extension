@@ -93,12 +93,42 @@
     "message": "This site isn't supported"
   },
   "unsupportedSiteBody": {
-    "message": "AutoClipper Downloader works on these sites — open a video there and it shows up here:"
+    "message": "AutoClipper Downloader works on these sites — open a video there and it shows up here. Already on one of them? Refresh the page."
   },
   "historyVideoFrom": {
     "message": "$1 video"
   },
   "qualityLabel": {
     "message": "Video quality"
+  },
+  "fabLabel": {
+    "message": "AutoClipper — videos on this page"
+  },
+  "hideFab": {
+    "message": "Hide this button on this site"
+  },
+  "hideFabTitle": {
+    "message": "Hide this button on this site — turn it back on from the extension popup"
+  },
+  "close": {
+    "message": "Close"
+  },
+  "fabSetting": {
+    "message": "Show floating button on this site"
+  },
+  "downloadAll": {
+    "message": "Download all ($1)"
+  },
+  "contextDownload": {
+    "message": "Download this video — AutoClipper"
+  },
+  "contextSendYouTube": {
+    "message": "Clip this video with AutoClipper"
+  },
+  "commandDownload": {
+    "message": "Download the video on screen"
+  },
+  "shortcutTip": {
+    "message": "Tip: press $1 (or right-click) to download the video you are watching."
   }
 }

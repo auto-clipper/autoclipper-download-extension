@@ -5,6 +5,7 @@ import type {
   DownloadStatus,
   InterceptorPayload,
   MediaItem,
+  PageInfo,
 } from '@/shared/types';
 import { providerForHost } from '@/providers/registry';
 import { extractFromPackagedMedia } from '@/providers/reddit';
@@ -68,7 +69,12 @@ function download(url: string, filename: string, meta?: DownloadMeta): void {
   }
 }
 
-const panel = createPanel({ mode: isYouTube ? 'youtube' : 'download', onDownload: download });
+const panel = createPanel({
+  mode: isYouTube ? 'youtube' : 'download',
+  siteKey: isYouTube ? 'youtube' : (provider?.id ?? host),
+
+  onDownload: download,
+});
 
 // On-video download buttons (not on YouTube: CTA only, never downloads).
 const inline = isYouTube
@@ -94,9 +100,47 @@ if (inline) {
   });
 }
 
-chrome.runtime.onMessage.addListener((message: BackgroundMessage) => {
-  if (message.type === 'download-status') {
+// Where the last right-click happened: the context menu downloads that video.
+let contextPoint: { x: number; y: number } | undefined;
+window.addEventListener(
+  'contextmenu',
+  (event) => {
+    contextPoint = { x: event.clientX, y: event.clientY };
+  },
+  { capture: true, passive: true },
+);
+
+/**
+ * Right-click menu / keyboard shortcut: download the video under the
+ * cursor, else the one on screen. With nothing to target (or on YouTube,
+ * which never downloads), open the panel instead.
+ */
+function downloadTarget(point?: { x: number; y: number }): void {
+  const item = inline?.targetItem(point);
+  if (!item) {
+    panel.open();
+    return;
+  }
+  download(item.url, item.filename, {
+    provider: item.provider,
+    title: item.title,
+    pageUrl: item.pageUrl,
+    audioUrl: item.audioUrl,
+  });
+}
+
+const siteKey = isYouTube ? 'youtube' : (provider?.id ?? host);
+
+chrome.runtime.onMessage.addListener((message: BackgroundMessage, _sender, sendResponse) => {
+  if (message.type === 'get-page-info') {
+    const info: PageInfo = { url: window.location.href, siteKey };
+    sendResponse(info);
+  } else if (message.type === 'download-status') {
     setStatus(message.url, message.status, message.error);
+  } else if (message.type === 'context-download') {
+    downloadTarget(contextPoint);
+  } else if (message.type === 'shortcut-download') {
+    downloadTarget();
   }
 });
 
