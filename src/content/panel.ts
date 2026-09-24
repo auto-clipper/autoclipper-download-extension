@@ -1,4 +1,5 @@
 import type { DownloadMeta, DownloadStatus, MediaItem } from '@/shared/types';
+import { failureReasonKey, providerName } from '@/shared/labels';
 
 interface PanelOptions {
   mode: 'download' | 'youtube';
@@ -12,7 +13,7 @@ export const APP_SEND_URL = (pageUrl: string, medium = 'panel-send') =>
 interface Panel {
   setItems(items: MediaItem[]): void;
   setYouTubeUrl(url: string): void;
-  setStatus(url: string, status: DownloadStatus): void;
+  setStatus(url: string, status: DownloadStatus, error?: string): void;
   /** Revert a button to idle if it is still on the spinner (safety timeout). */
   resetIfDownloading(url: string): void;
   /** Replace the panel body with an "extension updated, refresh page" notice. */
@@ -66,6 +67,12 @@ const STYLES = `
   .close { background: none; border: none; color: #8a93a3; cursor: pointer; font-size: 16px; }
   .item { padding: 12px 16px; border-bottom: 1px solid #1a1d24; display: flex; gap: 10px; }
   .thumb { width: 48px; height: 48px; border-radius: 8px; object-fit: cover; background: #1a1d24; flex-shrink: 0; }
+  .thumb.placeholder {
+    display: flex; align-items: center; justify-content: center;
+    color: #5c6470; font-size: 11px; font-weight: 700;
+  }
+  .err { margin-top: 6px; font-size: 11px; line-height: 1.4; color: #ff6b6b; }
+  .err:empty { display: none; }
   .meta { flex: 1; min-width: 0; }
   .title { font-size: 12.5px; line-height: 1.35; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
   .sub { font-size: 11px; color: #8a93a3; margin-top: 2px; }
@@ -113,6 +120,20 @@ const LOGO_SVG = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/
   <path d="M5 17h14v3H5z" fill="#0b0d11"/>
 </svg>`;
 
+/** Thumbnail, or a platform-initials tile when there is none or it fails to load. */
+function thumbnailFor(item: MediaItem): HTMLElement {
+  const placeholder = document.createElement('div');
+  placeholder.className = 'thumb placeholder';
+  placeholder.textContent = providerName(item.provider).slice(0, 2);
+  if (!item.thumbnail) return placeholder;
+  const img = document.createElement('img');
+  img.className = 'thumb';
+  img.alt = '';
+  img.src = item.thumbnail;
+  img.addEventListener('error', () => img.replaceWith(placeholder), { once: true });
+  return img;
+}
+
 export function createPanel(options: PanelOptions): Panel {
   const rootHost = document.createElement('div');
   rootHost.id = 'autoclipper-dl-root';
@@ -142,6 +163,23 @@ export function createPanel(options: PanelOptions): Panel {
   let currentItems: MediaItem[] = [];
   let youtubeUrl = '';
   const statuses = new Map<string, DownloadStatus>();
+  const errors = new Map<string, string>();
+
+  function applyError(line: HTMLElement, url: string): void {
+    const reason = statuses.get(url) === 'interrupted' ? errors.get(url) : undefined;
+    line.textContent = reason ? t(reason) : '';
+  }
+
+  function refresh(url: string): void {
+    for (const el of panel.querySelectorAll<HTMLElement>('[data-url]')) {
+      if (el.dataset.url !== url) continue;
+      if (el instanceof HTMLButtonElement) {
+        applyStatus(el, url, el.dataset.idleLabel ?? t('downloadVideo'));
+      } else if (el.classList.contains('err')) {
+        applyError(el, url);
+      }
+    }
+  }
 
   function applyStatus(button: HTMLButtonElement, url: string, idleLabel: string): void {
     const status = statuses.get(url);
@@ -208,12 +246,7 @@ export function createPanel(options: PanelOptions): Panel {
         const row = document.createElement('div');
         row.className = 'item';
 
-        if (item.thumbnail) {
-          const img = document.createElement('img');
-          img.className = 'thumb';
-          img.src = item.thumbnail;
-          row.appendChild(img);
-        }
+        row.appendChild(thumbnailFor(item));
 
         const meta = document.createElement('div');
         meta.className = 'meta';
@@ -223,7 +256,7 @@ export function createPanel(options: PanelOptions): Panel {
         meta.appendChild(title);
         const sub = document.createElement('div');
         sub.className = 'sub';
-        sub.textContent = [item.provider, item.quality].filter(Boolean).join(' · ');
+        sub.textContent = [providerName(item.provider), item.quality].filter(Boolean).join(' · ');
         meta.appendChild(sub);
 
         const actions = document.createElement('div');
@@ -264,6 +297,11 @@ export function createPanel(options: PanelOptions): Panel {
             selectedUrl = select.value;
             dl.dataset.url = selectedUrl;
             applyStatus(dl, selectedUrl, t('downloadVideo'));
+            const err = row.querySelector<HTMLElement>('.err');
+            if (err) {
+              err.dataset.url = selectedUrl;
+              applyError(err, selectedUrl);
+            }
           });
           actions.appendChild(select);
         }
@@ -291,6 +329,11 @@ export function createPanel(options: PanelOptions): Panel {
         actions.appendChild(send);
 
         meta.appendChild(actions);
+        const err = document.createElement('div');
+        err.className = 'err';
+        err.dataset.url = selectedUrl;
+        applyError(err, selectedUrl);
+        meta.appendChild(err);
         row.appendChild(meta);
         panel.appendChild(row);
       }
@@ -311,29 +354,29 @@ export function createPanel(options: PanelOptions): Panel {
 
   return {
     setItems(items: MediaItem[]) {
-      currentItems = items;
-      render();
+      // While the panel is open, a pure re-order (on-screen video changed)
+      // would re-render under the user's cursor and close an open quality
+      // picker. Keep the current order until new videos actually arrive.
+      const sameSet =
+        items.length === currentItems.length &&
+        items.every((item) => currentItems.some((c) => c.id === item.id));
+      currentItems = panel.classList.contains('open') && sameSet ? currentItems : items;
+      if (!sameSet || !panel.classList.contains('open')) render();
     },
     setYouTubeUrl(url: string) {
       youtubeUrl = url;
       render();
     },
-    setStatus(url: string, status: DownloadStatus) {
-      statuses.set(url, status);
-      for (const button of panel.querySelectorAll<HTMLButtonElement>(`.btn[data-url]`)) {
-        if (button.dataset.url === url) {
-          applyStatus(button, url, button.dataset.idleLabel ?? t('downloadVideo'));
-        }
-      }
+    setStatus(url: string, status: DownloadStatus, error?: string) {
+      if (status === 'canceled') statuses.delete(url);
+      else statuses.set(url, status);
+      if (status === 'interrupted') errors.set(url, failureReasonKey(error));
+      refresh(url);
     },
     resetIfDownloading(url: string) {
       if (statuses.get(url) !== 'downloading') return;
       statuses.delete(url);
-      for (const button of panel.querySelectorAll<HTMLButtonElement>(`.btn[data-url]`)) {
-        if (button.dataset.url === url) {
-          applyStatus(button, url, button.dataset.idleLabel ?? t('downloadVideo'));
-        }
-      }
+      refresh(url);
     },
     showStaleNotice() {
       // The i18n bundle is unreachable once the context is invalidated, so

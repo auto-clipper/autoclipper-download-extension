@@ -1,5 +1,6 @@
 import type { MediaItem, MediaVariant } from '@/shared/types';
 import { walkJson, buildFilename } from '@/shared/walk';
+import { qualityFromSize } from '@/shared/labels';
 import type { Provider } from './types';
 
 /**
@@ -40,7 +41,7 @@ export const instagram: Provider = {
           .filter((v: any) => typeof v?.url === 'string')
           .map((v: any) => ({
             url: v.url,
-            quality: v.width && v.height ? `${v.width}x${v.height}` : undefined,
+            quality: qualityFromSize(v.width, v.height),
           }));
       } else if (typeof obj.video_url === 'string' && obj.is_video) {
         url = obj.video_url;
@@ -65,7 +66,7 @@ export const instagram: Provider = {
         pageUrl: code ? `https://www.instagram.com/p/${code}/` : pageUrl,
         title: caption?.split('\n')[0],
         thumbnail: typeof thumbnail === 'string' ? thumbnail : undefined,
-        quality: width && height ? `${width}x${height}` : undefined,
+        quality: qualityFromSize(width, height),
         variants,
         filename: buildFilename('instagram', caption?.split('\n')[0], id),
       });

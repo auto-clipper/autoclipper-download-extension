@@ -1,11 +1,18 @@
 import { useState } from 'react';
 import type { DownloadMeta, DownloadStatus, MediaItem } from '@/shared/types';
+import { failureReasonKey, providerName } from '@/shared/labels';
 import { t, sendToAppUrl } from './helpers';
+import { Thumbnail } from './Thumbnail';
+
+export interface StatusEntry {
+  status: DownloadStatus;
+  error?: string;
+}
 
 interface MediaRowProps {
   item: MediaItem;
-  status?: DownloadStatus;
-  audioStatus?: DownloadStatus;
+  /** Keyed by download URL — each quality variant has its own entry. */
+  statuses: Record<string, StatusEntry>;
   onDownload: (url: string, filename: string, meta: DownloadMeta) => void;
 }
 
@@ -23,9 +30,14 @@ function label(status: DownloadStatus | undefined, idle: string) {
   return idle;
 }
 
-export function MediaRow({ item, status, audioStatus, onDownload }: MediaRowProps) {
+export function MediaRow({ item, statuses, onDownload }: MediaRowProps) {
   const variants = item.variants?.filter((v) => v.url) ?? [];
   const [selectedUrl, setSelectedUrl] = useState(item.url);
+  const status = statuses[selectedUrl]?.status;
+  const audioStatus = item.audioUrl ? statuses[item.audioUrl]?.status : undefined;
+  const failure = [selectedUrl, item.audioUrl]
+    .map((url) => (url ? statuses[url] : undefined))
+    .find((entry) => entry?.status === 'interrupted');
 
   const meta: DownloadMeta = {
     provider: item.provider,
@@ -36,17 +48,11 @@ export function MediaRow({ item, status, audioStatus, onDownload }: MediaRowProp
 
   return (
     <li className="flex gap-3 px-4 py-3">
-      {item.thumbnail && (
-        <img
-          src={item.thumbnail}
-          alt=""
-          className="h-12 w-12 flex-shrink-0 rounded-lg bg-[#1a1d24] object-cover"
-        />
-      )}
+      <Thumbnail item={item} />
       <div className="min-w-0 flex-1">
         <p className="line-clamp-2 text-xs leading-snug">{item.title || item.pageUrl}</p>
         <p className="mt-0.5 text-[11px] text-[#8a93a3]">
-          {[item.provider, item.quality].filter(Boolean).join(' · ')}
+          {[providerName(item.provider), item.quality].filter(Boolean).join(' · ')}
         </p>
         <div className="mt-2 flex flex-wrap items-center gap-1.5">
           <button
@@ -61,6 +67,7 @@ export function MediaRow({ item, status, audioStatus, onDownload }: MediaRowProp
             <select
               value={selectedUrl}
               onChange={(e) => setSelectedUrl(e.target.value)}
+              aria-label={t('qualityLabel')}
               className="cursor-pointer rounded-lg border border-[#23262e] bg-[#1a1d24] px-2 py-1.5 text-xs font-semibold text-[#f4f7fb]"
             >
               {variants.map((v) => (
@@ -96,6 +103,11 @@ export function MediaRow({ item, status, audioStatus, onDownload }: MediaRowProp
             {t('sendToAutoclipperShort')}
           </a>
         </div>
+        {failure && (
+          <p className="mt-1.5 text-[11px] leading-snug text-[#ff6b6b]">
+            {t(failureReasonKey(failure.error))}
+          </p>
+        )}
       </div>
     </li>
   );

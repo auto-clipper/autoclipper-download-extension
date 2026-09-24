@@ -10,6 +10,7 @@ import { providerForHost } from '@/providers/registry';
 import { extractFromPackagedMedia } from '@/providers/reddit';
 import { extractTikTokFromRehydration } from '@/providers/tiktok';
 import { createInlineButtons } from './inline';
+import { orderItems } from './match';
 import { APP_SEND_URL, createPanel } from './panel';
 import { INLINE_BUTTONS_KEY } from '@/shared/constants';
 
@@ -17,7 +18,9 @@ const host = window.location.hostname;
 const isYouTube = host.endsWith('youtube.com');
 const provider = providerForHost(host);
 
+/** Detected media in detection order (oldest first); see orderItems() for display order. */
 const items = new Map<string, MediaItem>();
+let visibleIds: string[] = [];
 
 /**
  * Reloading/updating the extension orphans the content scripts of already
@@ -29,9 +32,9 @@ function isStaleContext(error: unknown): boolean {
   return String(error).includes('Extension context invalidated');
 }
 
-function setStatus(url: string, status: DownloadStatus): void {
-  panel.setStatus(url, status);
-  inline?.setStatus(url, status);
+function setStatus(url: string, status: DownloadStatus, error?: string): void {
+  panel.setStatus(url, status, error);
+  inline?.setStatus(url, status, error);
 }
 
 function resetIfDownloading(url: string): void {
@@ -73,6 +76,10 @@ const inline = isYouTube
   : createInlineButtons({
       onDownload: download,
       sendUrl: (pageUrl) => APP_SEND_URL(pageUrl, 'inline-send'),
+      onVisibleItems: (ids) => {
+        visibleIds = ids;
+        publish();
+      },
     });
 
 // Users can turn the on-video buttons off from the popup.
@@ -89,7 +96,7 @@ if (inline) {
 
 chrome.runtime.onMessage.addListener((message: BackgroundMessage) => {
   if (message.type === 'download-status') {
-    setStatus(message.url, message.status);
+    setStatus(message.url, message.status, message.error);
   }
 });
 
@@ -102,10 +109,19 @@ function addItems(found: MediaItem[]): void {
     }
   }
   if (!changed) return;
-  const all = [...items.values()];
-  panel.setItems(all);
-  inline?.setItems(all);
-  void chrome.runtime.sendMessage({ type: 'media-found', items: all });
+  const ordered = publish();
+  // Forget what fell off the list so the map stays bounded on endless feeds.
+  const kept = new Set(ordered.map((item) => item.id));
+  for (const id of items.keys()) if (!kept.has(id)) items.delete(id);
+  inline?.setItems(ordered);
+}
+
+/** Push the current order (on-screen first, then newest) to the panel and popup. */
+function publish(): MediaItem[] {
+  const ordered = orderItems([...items.values()], visibleIds);
+  panel.setItems(ordered);
+  void chrome.runtime.sendMessage({ type: 'media-found', items: ordered }).catch(() => {});
+  return ordered;
 }
 
 // --- Interceptor relay (Instagram, TikTok, X) ---

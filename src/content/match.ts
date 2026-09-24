@@ -50,3 +50,19 @@ export function itemForLocation(href: string, items: MediaItem[]): MediaItem | u
     return id.length >= MIN_TOKEN_LENGTH && href.includes(id);
   });
 }
+
+/** Most recent detections kept per tab; long feeds would otherwise grow forever. */
+export const MAX_ITEMS = 50;
+
+/**
+ * List order for the panel and popup: videos on screen first (most
+ * prominent first), then everything else newest first. `detected` is in
+ * detection order (oldest first). Keeps at most MAX_ITEMS, dropping the
+ * oldest off-screen ones.
+ */
+export function orderItems(detected: MediaItem[], visibleIds: string[]): MediaItem[] {
+  const byId = new Map(detected.map((item) => [item.id, item]));
+  const visible = visibleIds.flatMap((id) => byId.get(id) ?? []);
+  const rest = detected.filter((item) => !visibleIds.includes(item.id)).reverse();
+  return [...visible, ...rest].slice(0, MAX_ITEMS);
+}

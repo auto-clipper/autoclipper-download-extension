@@ -1,4 +1,5 @@
 import type { DownloadMeta, DownloadStatus, MediaItem } from '@/shared/types';
+import { failureReasonKey } from '@/shared/labels';
 import { itemForLocation, matchItem } from './match';
 
 /**
@@ -16,11 +17,13 @@ import { itemForLocation, matchItem } from './match';
 interface InlineOptions {
   onDownload: (url: string, filename: string, meta?: DownloadMeta) => void;
   sendUrl: (pageUrl: string) => string;
+  /** Items paired with a player on screen, most prominent first (drives list order). */
+  onVisibleItems?: (ids: string[]) => void;
 }
 
 export interface InlineButtons {
   setItems(items: MediaItem[]): void;
-  setStatus(url: string, status: DownloadStatus): void;
+  setStatus(url: string, status: DownloadStatus, error?: string): void;
   resetIfDownloading(url: string): void;
   setEnabled(enabled: boolean): void;
 }
@@ -155,8 +158,10 @@ export function createInlineButtons(options: InlineOptions): InlineButtons {
   let items: MediaItem[] = [];
   let enabled = true;
   const statuses = new Map<string, DownloadStatus>();
+  const errors = new Map<string, string>();
   const entries = new Map<Element, Entry>();
   let pointer: { x: number; y: number } | null = null;
+  let lastVisible = '';
   let frame = 0;
 
   const attach = () => {
@@ -169,6 +174,8 @@ export function createInlineButtons(options: InlineOptions): InlineButtons {
     dl.disabled = status === 'downloading';
     dl.classList.toggle('done', status === 'complete');
     dl.classList.toggle('failed', status === 'interrupted');
+    const reason = status === 'interrupted' ? errors.get(item.url) : undefined;
+    dl.title = reason ? t(reason) : [t('downloadVideo'), item.quality].filter(Boolean).join(' · ');
     const label = document.createElement('span');
     if (status === 'downloading') {
       label.textContent = t('downloading');
@@ -194,7 +201,6 @@ export function createInlineButtons(options: InlineOptions): InlineButtons {
 
     const dl = document.createElement('button');
     dl.className = 'dl';
-    dl.title = [t('downloadVideo'), item.quality].filter(Boolean).join(' · ');
 
     const send = document.createElement('a');
     send.className = 'send';
@@ -229,6 +235,22 @@ export function createInlineButtons(options: InlineOptions): InlineButtons {
     layer.appendChild(pill);
     applyStatus(entry);
     return entry;
+  }
+
+  function reportVisible(paired: Map<Element, MediaItem>): void {
+    // Most prominent first: nearest to the viewport centre.
+    const centre = window.innerHeight / 2;
+    const distance = (el: Element) => {
+      const r = el.getBoundingClientRect();
+      return Math.abs(r.top + r.height / 2 - centre);
+    };
+    const ids = [...paired]
+      .sort(([a], [b]) => distance(a) - distance(b))
+      .map(([, item]) => item.id);
+    const key = ids.join('|');
+    if (key === lastVisible) return;
+    lastVisible = key;
+    options.onVisibleItems?.(ids);
   }
 
   /** Re-pair players with items; runs on a slow interval (DOM walk is not free). */
@@ -278,6 +300,7 @@ export function createInlineButtons(options: InlineOptions): InlineButtons {
     for (const [player, item] of paired) {
       if (!entries.has(player)) entries.set(player, createEntry(item));
     }
+    reportVisible(paired);
     schedule();
   }
 
@@ -345,8 +368,14 @@ export function createInlineButtons(options: InlineOptions): InlineButtons {
       items = next;
       scan();
     },
-    setStatus(url: string, status: DownloadStatus) {
+    setStatus(url: string, status: DownloadStatus, error?: string) {
+      if (status === 'canceled') {
+        statuses.delete(url);
+        refreshStatus(url);
+        return;
+      }
       statuses.set(url, status);
+      if (status === 'interrupted') errors.set(url, failureReasonKey(error));
       refreshStatus(url);
       // Leave the "Saved ✓"/"Failed" state up briefly, then go back to hover-only.
       if (status !== 'downloading') {

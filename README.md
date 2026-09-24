@@ -10,7 +10,9 @@ Chrome (MV3) extension that downloads videos from **Instagram, TikTok, Reddit, X
 - **Reddit audio muxing** — separate DASH/CMAF video + audio tracks are fetched and muxed into one MP4 in an offscreen document (mp4box.js). Falls back to a video-only + separate-audio download if muxing fails.
 - **Send to AutoClipper** — every detected video (and long-form YouTube pages) links into the app at `/projects?video=<url>` to turn it into captioned clips.
 - **Sign-in status** — the popup greets AutoClipper users (read from app.autoclipper.live localStorage, never the token) or offers a login button.
-- **Download history** in the popup, with "show in folder" and re-download.
+- **Download history** in the popup: relative times, "download again", and "show in folder" (hidden once the file is gone).
+- **Readable lists** — the panel and popup list the video(s) on screen first, then newest first (capped at 50 per tab). X videos are titled with the tweet text and link to the tweet; qualities read `720p` everywhere; missing thumbnails fall back to a platform tile.
+- **Failure reasons** — a failed download says why (expired link → refresh the page; disk/folder problem; generic). Cancelling in Chrome's download UI resets the button instead of showing an error.
 - **Review prompt** after a few successful downloads (once the store id is set).
 - **Install / uninstall pages** on the GitHub Pages site for onboarding and uninstall feedback.
 - **Localized** in English, Portuguese (BR) and Spanish.

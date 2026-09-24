@@ -23,7 +23,8 @@ export interface MediaItem {
   filename: string;
 }
 
-export type DownloadStatus = 'downloading' | 'complete' | 'interrupted';
+/** 'canceled' = the user cancelled it in Chrome: back to idle, not an error. */
+export type DownloadStatus = 'downloading' | 'complete' | 'interrupted' | 'canceled';
 
 /** Logged-in AutoClipper user, as observed on app.autoclipper.live. */
 export interface AuthUser {
@@ -47,6 +48,11 @@ export interface HistoryEntry {
   /** Epoch ms; supplied by the caller (service workers lack a stable clock). */
   savedAt: number;
   downloadId?: number;
+  /** Source URL(s), for "download again". Signed links may have expired by then. */
+  url?: string;
+  audioUrl?: string;
+  /** Set by get-history: false once the file was deleted or moved on disk. */
+  fileExists?: boolean;
 }
 
 export type BackgroundMessage =
@@ -56,7 +62,7 @@ export type BackgroundMessage =
   | { type: 'show-download'; downloadId: number }
   | { type: 'get-history' }
   | { type: 'clear-history' }
-  | { type: 'download-status'; url: string; status: DownloadStatus }
+  | { type: 'download-status'; url: string; status: DownloadStatus; error?: string }
   | { type: 'auth-state'; user: AuthUser | null }
   | { type: 'clear-media' };
 
