@@ -4,7 +4,9 @@ import type { AuthUser } from '@/shared/types';
  * Runs only on app.autoclipper.live. Mirrors the app's login state into the
  * extension so the popup can show "signed in as X" / a login button. The app
  * keeps the Strapi user JSON in localStorage under 'user' (JWT under
- * 'token'); we only read the display fields and never touch the token.
+ * 'token') and the avatar URL under 'profilePictureUrl' (frontend
+ * src/lib/profilePictureCache.ts); we only read the display fields and
+ * never touch the token.
  */
 
 let lastReported = '';
@@ -14,7 +16,12 @@ function readUser(): AuthUser | null {
     const raw = localStorage.getItem('user');
     if (!raw || !localStorage.getItem('token')) return null;
     const parsed = JSON.parse(raw);
-    return { username: parsed?.username ?? null, email: parsed?.email ?? null };
+    const avatar = localStorage.getItem('profilePictureUrl');
+    return {
+      username: parsed?.username ?? null,
+      email: parsed?.email ?? null,
+      avatarUrl: avatar && /^https:\/\//.test(avatar) ? avatar : null,
+    };
   } catch {
     return null;
   }

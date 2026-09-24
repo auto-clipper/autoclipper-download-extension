@@ -1,5 +1,6 @@
 import type { DownloadMeta, DownloadStatus, MediaItem } from '@/shared/types';
 import { failureReasonKey } from '@/shared/labels';
+import { canSendToApp } from '@/shared/constants';
 import { itemForLocation, matchItem } from './match';
 
 /**
@@ -239,7 +240,9 @@ export function createInlineButtons(options: InlineOptions): InlineButtons {
     });
     send.href = options.sendUrl(item.pageUrl);
 
-    pill.append(dl, send);
+    pill.append(dl);
+    // The app can't import TikTok/X/Reddit links; no Send button there.
+    if (canSendToApp(item.provider)) pill.append(send);
     layer.appendChild(pill);
     applyStatus(entry);
     return entry;

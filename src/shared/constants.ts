@@ -3,12 +3,8 @@
 export const APP_URL = 'https://app.autoclipper.live';
 export const SITE_URL = 'https://autoclipper.live';
 
-/**
- * Chrome Web Store listing. Placeholder until the extension is published —
- * update the id here (and the review prompt starts linking to the real
- * listing). See store/publishing-checklist.md.
- */
-export const STORE_ITEM_ID = 'REPLACE_WITH_STORE_ID';
+/** Chrome Web Store listing (drives the review prompt). */
+export const STORE_ITEM_ID = 'pdjpofbkmgclkjapmohencchmegcaekl';
 export const STORE_LISTING_URL = `https://chromewebstore.google.com/detail/${STORE_ITEM_ID}`;
 export const STORE_REVIEW_URL = `${STORE_LISTING_URL}/reviews`;
 
@@ -32,3 +28,14 @@ export interface FabPref {
 }
 
 export type FabPrefs = Record<string, FabPref>;
+
+/**
+ * Sources the app's URL import accepts (frontend resolveLibrarySourceAccess:
+ * YouTube free; Instagram/Twitch Pro, with an upsell for free users).
+ * "Send to AutoClipper" is only offered for these — the app rejects
+ * TikTok/X/Reddit links as an unsupported source.
+ */
+export const APP_IMPORTABLE_PROVIDERS: readonly string[] = ['youtube', 'instagram', 'twitch'];
+
+export const canSendToApp = (provider: string): boolean =>
+  APP_IMPORTABLE_PROVIDERS.includes(provider);

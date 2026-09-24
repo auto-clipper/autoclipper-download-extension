@@ -12,7 +12,7 @@ Chrome (MV3) extension that downloads videos from **Instagram, TikTok, Reddit, X
 - **Movable floating button** — drag it anywhere; hide it per platform from the panel header (eye icon) and bring it back from the popup. Position/visibility are stored per platform in `chrome.storage.local` (`fabPrefs`).
 - **Quality picker** — pick from every rendition the site exposes (Reddit permutations, X bitrates, Instagram versions, Twitch qualities).
 - **Reddit audio muxing** — separate DASH/CMAF video + audio tracks are fetched and muxed into one MP4 in an offscreen document (mp4box.js). Falls back to a video-only + separate-audio download if muxing fails.
-- **Send to AutoClipper** — every detected video (and long-form YouTube pages) links into the app at `/projects?video=<url>` to turn it into captioned clips.
+- **Send to AutoClipper** — videos from sources the app can import (YouTube, Instagram, Twitch — see `APP_IMPORTABLE_PROVIDERS`) link into the app at `/projects?video=<url>` to turn them into captioned clips. TikTok, X and Reddit get no Send button: the app rejects those links.
 - **Sign-in status** — the popup greets AutoClipper users (read from app.autoclipper.live localStorage, never the token) or offers a login button.
 - **Download history** in the popup: relative times, "download again", and "show in folder" (hidden once the file is gone).
 - **Readable lists** — the panel and popup list the video(s) on screen first, then newest first (capped at 50 per tab). X videos are titled with the tweet text and link to the tweet; qualities read `720p` everywhere; missing thumbnails fall back to a platform tile.
@@ -38,7 +38,7 @@ Files are saved to `Downloads/autoclipper/<provider>-<title-or-id>.mp4`.
 ## AutoClipper app integration
 
 - **Send to AutoClipper** — on YouTube watch/live pages, the panel and popup show a "Send to AutoClipper" CTA that deep-links into the app: `https://app.autoclipper.live/projects?video=<encoded video URL>`. The app's `/projects` page consumes the `video` query param and starts the URL-upload flow automatically (frontend: `parseVideoDeepLink` + effect in `ProjectsListPage`). The param survives the login redirect (`/login?redirect=...`). YouTube Shorts keep the generic landing-page CTA.
-- **Sign-in status** — a content script on `app.autoclipper.live` (`src/content/autoclipper.ts`) mirrors the app's localStorage login state (username/email only, never the token) into `chrome.storage.local`, so the popup greets logged-in users and shows a "Sign in with AutoClipper" button otherwise. This data never leaves the browser.
+- **Sign-in status** — a content script on `app.autoclipper.live` (`src/content/autoclipper.ts`) mirrors the app's localStorage login state (username/email, plus the avatar URL the app caches as `profilePictureUrl`; never the token) into `chrome.storage.local`, so the popup greets logged-in users and shows a "Sign in with AutoClipper" button otherwise. This data never leaves the browser.
 
 ## Development
 

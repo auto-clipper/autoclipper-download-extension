@@ -6,7 +6,7 @@ AutoClipper Baixar Vídeos
 
 ## Resumo (máx 132 caracteres)
 
-Baixe vídeos do Instagram, TikTok, Reddit e X em um clique. Grátis, rápido e sem marca d'água. Por autoclipper.live.
+Baixe vídeos do Instagram, TikTok, Reddit, X e Twitch em um clique. Grátis e sem marca d'água. Por autoclipper.live.
 
 ## Descrição
 
@@ -23,9 +23,15 @@ Baixe vídeos das suas redes sociais favoritas em um clique — direto da págin
 Selecione exatamente qual resolução salvar — de 360p até a melhor que o site oferece.
 
 ▶️ COMO FUNCIONA
-1. Navegue normalmente pelo Instagram, TikTok, Reddit ou X
-2. Quando um vídeo for detectado, o botão do AutoClipper aparece no canto da página
-3. Clique nele e escolha "Baixar vídeo" — pronto, o MP4 está na sua pasta de Downloads
+1. Navegue normalmente pelo Instagram, TikTok, Reddit, X ou Twitch
+2. Passe o mouse sobre qualquer vídeo — um botão "Baixar" aparece em cima dele
+3. Clique — pronto, o MP4 está na sua pasta de Downloads
+
+⚡ AINDA MAIS RÁPIDO
+• Clique com o botão direito no vídeo → "Baixar este vídeo"
+• Pressione Alt+Shift+D para baixar o vídeo que você está vendo
+• "Baixar todos" salva todos os vídeos da página de uma vez
+• Todos os vídeos detectados também ficam no botão do AutoClipper no canto (arraste para onde quiser, ou oculte por site)
 
 ✨ POR QUE ESTA EXTENSÃO
 • 100% grátis, sem cadastro
@@ -35,7 +41,7 @@ Selecione exatamente qual resolução salvar — de 360p até a melhor que o sit
 • Não coletamos, armazenamos nem vendemos nenhum dado pessoal
 
 🎬 QUER TRANSFORMAR VÍDEOS EM CORTES VIRAIS?
-Esta extensão é feita pelo AutoClipper (https://autoclipper.live) — a plataforma que corta, legenda e publica cortes virais automaticamente. No YouTube, a extensão mostra um atalho para cortar qualquer vídeo com o AutoClipper.
+Esta extensão é feita pelo AutoClipper (https://autoclipper.live) — a plataforma que corta, legenda e publica cortes virais automaticamente. No YouTube, Instagram e Twitch, um clique envia o vídeo para o AutoClipper transformar em cortes.
 
 Observação: esta extensão não baixa vídeos do YouTube, em conformidade com as políticas da Chrome Web Store. Baixe apenas conteúdo que você tem o direito de salvar.
 
