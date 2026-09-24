@@ -17,3 +17,18 @@ export const REVIEW_PROMPT_THRESHOLD = 4;
 
 /** chrome.storage.local flag: show download buttons on video players (default on). */
 export const INLINE_BUTTONS_KEY = 'inlineButtons';
+
+/**
+ * chrome.storage.local: per-platform floating-button prefs, keyed by
+ * provider id ("instagram", "youtube", ...). See FabPrefs.
+ */
+export const FAB_PREFS_KEY = 'fabPrefs';
+
+export interface FabPref {
+  hidden?: boolean;
+  /** Distance from the viewport's right/bottom edges, in px (dragged position). */
+  right?: number;
+  bottom?: number;
+}
+
+export type FabPrefs = Record<string, FabPref>;

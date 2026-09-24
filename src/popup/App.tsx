@@ -5,11 +5,17 @@ import type {
   DownloadMeta,
   DownloadResponse,
   MediaItem,
+  PageInfo,
 } from '@/shared/types';
-import { APP_URL, INLINE_BUTTONS_KEY, SITE_URL } from '@/shared/constants';
-import { t, safeHostname, safePathname, sendToAppUrl } from './helpers';
+import {
+  APP_URL,
+  FAB_PREFS_KEY,
+  INLINE_BUTTONS_KEY,
+  SITE_URL,
+  type FabPrefs,
+} from '@/shared/constants';
+import { t, safePathname, sendToAppUrl } from './helpers';
 import { MediaRow, type StatusEntry } from './MediaRow';
-import { providerForHost } from '@/providers/registry';
 import { DownloadHistory } from './DownloadHistory';
 import { ReviewPrompt } from './ReviewPrompt';
 
@@ -27,15 +33,23 @@ const SUPPORTED_SITES: [string, string][] = [
 export function App() {
   const [items, setItems] = useState<MediaItem[]>([]);
   const [pageUrl, setPageUrl] = useState('');
+  const [siteKey, setSiteKey] = useState<string | undefined>();
   const [loading, setLoading] = useState(true);
   const [statuses, setStatuses] = useState<Record<string, StatusEntry>>({});
   const [authUser, setAuthUser] = useState<AuthUser | null>(null);
   const [inlineButtons, setInlineButtons] = useState(true);
+  const [fabPrefs, setFabPrefs] = useState<FabPrefs>({});
+  const [shortcut, setShortcut] = useState('');
 
   useEffect(() => {
-    void chrome.storage.local.get(['acAuth', INLINE_BUTTONS_KEY]).then((stored) => {
+    void chrome.storage.local.get(['acAuth', INLINE_BUTTONS_KEY, FAB_PREFS_KEY]).then((stored) => {
       setAuthUser((stored.acAuth as AuthUser | null) ?? null);
       setInlineButtons(stored[INLINE_BUTTONS_KEY] !== false);
+      setFabPrefs((stored[FAB_PREFS_KEY] as FabPrefs | undefined) ?? {});
+    });
+    // Empty when the user removed it or another extension took the keys.
+    void chrome.commands.getAll().then((commands) => {
+      setShortcut(commands.find((c) => c.name === 'download-video')?.shortcut ?? '');
     });
   }, []);
 
@@ -64,8 +78,14 @@ export function App() {
   useEffect(() => {
     void (async () => {
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-      setPageUrl(tab?.url ?? '');
       if (tab?.id !== undefined) {
+        // Ask the page itself (see PageInfo): no answer means an unsupported
+        // site, or a supported tab still running a pre-update content script.
+        const info = (await chrome.tabs
+          .sendMessage(tab.id, { type: 'get-page-info' }, { frameId: 0 })
+          .catch(() => undefined)) as PageInfo | undefined;
+        setPageUrl(info?.url ?? '');
+        setSiteKey(info?.siteKey);
         const media = (await chrome.runtime.sendMessage({
           type: 'get-media',
           tabId: tab.id,
@@ -76,9 +96,42 @@ export function App() {
     })();
   }, []);
 
-  const isYouTube = /(^|\.)youtube\.com$/.test(safeHostname(pageUrl));
+  const isYouTube = siteKey === 'youtube';
   const isWatchPage = isYouTube && /\/watch\b|\/live\//.test(safePathname(pageUrl));
-  const isSupported = isYouTube || Boolean(providerForHost(safeHostname(pageUrl)));
+  const isSupported = Boolean(siteKey);
+  const fabShown = !siteKey || !fabPrefs[siteKey]?.hidden;
+
+  const toggleFab = (shown: boolean) => {
+    if (!siteKey) return;
+    const next = { ...fabPrefs, [siteKey]: { ...fabPrefs[siteKey], hidden: !shown } };
+    setFabPrefs(next);
+    // The page's content script listens on storage.onChanged.
+    void chrome.storage.local.set({ [FAB_PREFS_KEY]: next });
+  };
+
+  const downloadAll = () => {
+    items
+      .filter((item) => {
+        const status = statuses[item.url]?.status;
+        return status !== 'downloading' && status !== 'complete';
+      })
+      .forEach((item, i) =>
+        setTimeout(
+          () =>
+            download(item.url, item.filename, {
+              provider: item.provider,
+              title: item.title,
+              pageUrl: item.pageUrl,
+              audioUrl: item.audioUrl,
+            }),
+          i * 300,
+        ),
+      );
+  };
+  const pendingCount = items.filter((item) => {
+    const status = statuses[item.url]?.status;
+    return status !== 'downloading' && status !== 'complete';
+  }).length;
 
   const download = (url: string, filename: string, meta: DownloadMeta) => {
     setStatuses((prev) => ({ ...prev, [url]: { status: 'downloading' } }));
@@ -179,11 +232,24 @@ export function App() {
             <p className="mt-2 text-[11px] text-[#5c6470]">{SUPPORTED_HINT}</p>
           </div>
         ) : (
-          <ul className="divide-y divide-[#1a1d24]">
-            {items.map((item) => (
-              <MediaRow key={item.id} item={item} statuses={statuses} onDownload={download} />
-            ))}
-          </ul>
+          <>
+            {items.length > 1 && (
+              <div className="flex justify-end border-b border-[#1a1d24] px-4 py-2">
+                <button
+                  onClick={downloadAll}
+                  disabled={pendingCount === 0}
+                  className="cursor-pointer rounded-lg bg-[#1a1d24] px-3 py-1.5 text-xs font-bold text-[#bfff00] hover:bg-[#23262e] disabled:cursor-default disabled:opacity-60"
+                >
+                  {t('downloadAll', [String(pendingCount)])}
+                </button>
+              </div>
+            )}
+            <ul className="divide-y divide-[#1a1d24]">
+              {items.map((item) => (
+                <MediaRow key={item.id} item={item} statuses={statuses} onDownload={download} />
+              ))}
+            </ul>
+          </>
         )}
 
         <DownloadHistory onDownload={download} statuses={statuses} />
@@ -199,6 +265,22 @@ export function App() {
             className="h-4 w-4 cursor-pointer accent-[#bfff00]"
           />
         </label>
+        {siteKey && (
+          <label className="mb-3 flex cursor-pointer items-center justify-between gap-3 text-xs text-[#8a93a3]">
+            {t('fabSetting')}
+            <input
+              type="checkbox"
+              checked={fabShown}
+              onChange={(event) => toggleFab(event.target.checked)}
+              className="h-4 w-4 cursor-pointer accent-[#bfff00]"
+            />
+          </label>
+        )}
+        {shortcut && siteKey !== 'youtube' && (
+          <p className="mb-3 text-[11px] leading-snug text-[#5c6470]">
+            {t('shortcutTip', [shortcut])}
+          </p>
+        )}
         <div className="mb-2 flex items-center justify-between gap-2">
           {authUser ? (
             <a

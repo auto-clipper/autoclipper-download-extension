@@ -6,6 +6,9 @@ import type {
   MediaItem,
 } from '@/shared/types';
 
+import { APP_URL } from '@/shared/constants';
+import { REDDIT_MATCHES, SOCIAL_MATCHES, YOUTUBE_WATCH_MATCHES } from '@/shared/sites';
+
 /**
  * MV3 service worker. Keeps the per-tab list of detected media in
  * chrome.storage.session (the worker itself is ephemeral) and performs
@@ -247,9 +250,60 @@ chrome.tabs.onRemoved.addListener((tabId) => {
   void chrome.storage.session.remove(keyFor(tabId));
 });
 
+// --- Right-click menu + keyboard shortcut ---
+
+const MENU_DOWNLOAD = 'acdl-download';
+const MENU_YOUTUBE = 'acdl-youtube-send';
+
+function createMenus(): void {
+  chrome.contextMenus.removeAll(() => {
+    // Offered on any right-click on supported sites: Instagram/TikTok cover
+    // their <video> with overlays, so a video-only context would never show.
+    // The content script resolves which video (under the cursor, else the
+    // one on screen).
+    chrome.contextMenus.create({
+      id: MENU_DOWNLOAD,
+      title: chrome.i18n.getMessage('contextDownload'),
+      contexts: ['page', 'video', 'image', 'link', 'frame'],
+      documentUrlPatterns: [...SOCIAL_MATCHES, ...REDDIT_MATCHES],
+    });
+    // YouTube: never a download — a deep link into the app instead.
+    chrome.contextMenus.create({
+      id: MENU_YOUTUBE,
+      title: chrome.i18n.getMessage('contextSendYouTube'),
+      contexts: ['page', 'video'],
+      documentUrlPatterns: YOUTUBE_WATCH_MATCHES,
+    });
+  });
+}
+
+chrome.contextMenus.onClicked.addListener((info, tab) => {
+  if (info.menuItemId === MENU_YOUTUBE && info.pageUrl) {
+    void chrome.tabs.create({
+      url:
+        `${APP_URL}/projects?video=${encodeURIComponent(info.pageUrl)}` +
+        `&${UTM}&utm_medium=context-menu-send`,
+    });
+    return;
+  }
+  if (info.menuItemId === MENU_DOWNLOAD && tab?.id !== undefined) {
+    const message: BackgroundMessage = { type: 'context-download' };
+    chrome.tabs.sendMessage(tab.id, message, { frameId: 0 }).catch(() => {});
+  }
+});
+
+chrome.commands.onCommand.addListener((command, tab) => {
+  if (command !== 'download-video' || tab?.id === undefined) return;
+  const message: BackgroundMessage = { type: 'shortcut-download' };
+  // No content script on unsupported sites: nothing to do there.
+  chrome.tabs.sendMessage(tab.id, message, { frameId: 0 }).catch(() => {});
+});
+
 // --- Install / uninstall funnel ---
 
 chrome.runtime.onInstalled.addListener((details) => {
+  // Menus persist across worker restarts; (re)create on install and update.
+  createMenus();
   if (details.reason === 'install') {
     void chrome.tabs.create({
       url: `${DOCS_SITE}/welcome.html?${UTM}&utm_medium=post-install`,

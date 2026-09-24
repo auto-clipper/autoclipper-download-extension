@@ -1,9 +1,38 @@
 import type { DownloadMeta, DownloadStatus, MediaItem } from '@/shared/types';
 import { failureReasonKey, providerName } from '@/shared/labels';
+import { FAB_PREFS_KEY, type FabPref, type FabPrefs } from '@/shared/constants';
 
 interface PanelOptions {
   mode: 'download' | 'youtube';
+  /** Key for per-platform floating-button prefs (provider id or "youtube"). */
+  siteKey: string;
   onDownload: (url: string, filename: string, meta?: DownloadMeta) => void;
+}
+
+const FAB_SIZE = 52;
+const FAB_DEFAULT_OFFSET = 24;
+const FAB_EDGE_MARGIN = 8;
+/** Pointer travel before a press on the button counts as a drag, not a click. */
+const DRAG_THRESHOLD = 5;
+const PANEL_GAP = 12;
+const PANEL_MAX_HEIGHT = 420;
+/** Stagger for "Download all" so the queue starts in list order. */
+const DOWNLOAD_ALL_STAGGER_MS = 300;
+
+const SCISSORS_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4L8.12 15.88M14.47 14.48L20 20M8.12 8.12L12 12"/></svg>`;
+const EYE_OFF_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><path d="M1 1l22 22"/></svg>`;
+
+const clamp = (value: number, min: number, max: number) =>
+  Math.min(Math.max(value, min), Math.max(min, max));
+
+function downloadMetaFor(item: MediaItem): DownloadMeta {
+  return {
+    provider: item.provider,
+    title: item.title,
+    pageUrl: item.pageUrl,
+    // Reddit fallback path: mux the separate audio track in.
+    audioUrl: item.audioUrl,
+  };
 }
 
 export const APP_SEND_URL = (pageUrl: string, medium = 'panel-send') =>
@@ -18,6 +47,8 @@ interface Panel {
   resetIfDownloading(url: string): void;
   /** Replace the panel body with an "extension updated, refresh page" notice. */
   showStaleNotice(): void;
+  /** Open the panel (even when the floating button is hidden on this site). */
+  open(): void;
 }
 
 const t = (key: string, subs?: string[]) => chrome.i18n.getMessage(key, subs) || key;
@@ -45,6 +76,8 @@ const STYLES = `
   }
   .fab:hover { transform: scale(1.06); }
   .fab.visible { display: flex; }
+  .fab.user-hidden { display: none; }
+  .fab.dragging { cursor: grabbing; transform: scale(1.06); transition: none; }
   .fab svg { width: 26px; height: 26px; }
   .badge {
     position: absolute; top: -6px; right: -6px; min-width: 20px; height: 20px;
@@ -54,7 +87,7 @@ const STYLES = `
   }
   .panel {
     position: fixed; bottom: 88px; right: 24px; z-index: 2147483646;
-    width: 340px; max-height: 420px; overflow-y: auto; border-radius: 16px;
+    width: 340px; max-width: calc(100vw - 16px); max-height: 420px; overflow-y: auto; border-radius: 16px;
     background: #0b0d11; color: #f4f7fb; border: 1px solid #23262e;
     box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5); display: none;
   }
@@ -65,6 +98,19 @@ const STYLES = `
     align-items: center;
   }
   .close { background: none; border: none; color: #8a93a3; cursor: pointer; font-size: 16px; }
+  .header-actions { display: flex; align-items: center; gap: 4px; }
+  .icon {
+    width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center;
+    background: none; border: none; border-radius: 8px; color: #8a93a3; cursor: pointer;
+  }
+  .icon:hover { background: #1a1d24; color: #f4f7fb; }
+  .icon svg { width: 16px; height: 16px; }
+  .all {
+    border: none; border-radius: 8px; padding: 5px 10px; font-size: 11.5px; font-weight: 700;
+    cursor: pointer; background: #1a1d24; color: #bfff00; margin-right: 2px;
+  }
+  .all:hover { background: #23262e; }
+  .all:disabled { opacity: 0.6; cursor: default; }
   .item { padding: 12px 16px; border-bottom: 1px solid #1a1d24; display: flex; gap: 10px; }
   .thumb { width: 48px; height: 48px; border-radius: 8px; object-fit: cover; background: #1a1d24; flex-shrink: 0; }
   .thumb.placeholder {
@@ -84,8 +130,10 @@ const STYLES = `
   .btn.secondary { background: #23262e; color: #f4f7fb; }
   .btn.send {
     background: transparent; color: #00e5ff; border: 1px solid rgba(0,229,255,0.4);
-    display: inline-flex; align-items: center; gap: 4px;
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 30px; height: 28px; padding: 0;
   }
+  .btn.send svg { width: 15px; height: 15px; }
   .btn:hover { filter: brightness(1.1); }
   .quality {
     background: #1a1d24; color: #f4f7fb; border: 1px solid #23262e; border-radius: 8px;
@@ -145,6 +193,8 @@ export function createPanel(options: PanelOptions): Panel {
 
   const fab = document.createElement('button');
   fab.className = 'fab';
+  fab.setAttribute('aria-label', t('fabLabel'));
+  fab.title = t('fabLabel');
   fab.innerHTML = `${LOGO_SVG}<span class="badge">0</span>`;
   shadow.appendChild(fab);
 
@@ -158,7 +208,109 @@ export function createPanel(options: PanelOptions): Panel {
   attach();
   document.addEventListener('DOMContentLoaded', attach);
 
-  fab.addEventListener('click', () => panel.classList.toggle('open'));
+  // --- Floating button: per-platform position + "hide on this site" ---
+  let pref: FabPref = {};
+
+  function fabOffsets(): { right: number; bottom: number } {
+    return {
+      right: clamp(
+        pref.right ?? FAB_DEFAULT_OFFSET,
+        FAB_EDGE_MARGIN,
+        window.innerWidth - FAB_SIZE - FAB_EDGE_MARGIN,
+      ),
+      bottom: clamp(
+        pref.bottom ?? FAB_DEFAULT_OFFSET,
+        FAB_EDGE_MARGIN,
+        window.innerHeight - FAB_SIZE - FAB_EDGE_MARGIN,
+      ),
+    };
+  }
+
+  /** Open the panel on whichever side of the button has room. */
+  function positionPanel(): void {
+    const { right, bottom } = fabOffsets();
+    const fabTop = window.innerHeight - bottom - FAB_SIZE;
+    const fabLeft = window.innerWidth - right - FAB_SIZE;
+    const opensUp = fabTop + FAB_SIZE / 2 > window.innerHeight / 2;
+    const room = opensUp
+      ? fabTop - PANEL_GAP
+      : window.innerHeight - (fabTop + FAB_SIZE + PANEL_GAP);
+    panel.style.maxHeight = `${Math.max(160, Math.min(PANEL_MAX_HEIGHT, room - FAB_EDGE_MARGIN))}px`;
+    panel.style.top = opensUp ? 'auto' : `${fabTop + FAB_SIZE + PANEL_GAP}px`;
+    panel.style.bottom = opensUp ? `${bottom + FAB_SIZE + PANEL_GAP}px` : 'auto';
+    const alignRight = fabLeft + FAB_SIZE / 2 > window.innerWidth / 2;
+    panel.style.right = alignRight ? `${right}px` : 'auto';
+    panel.style.left = alignRight ? 'auto' : `${fabLeft}px`;
+  }
+
+  function applyFabPref(): void {
+    const { right, bottom } = fabOffsets();
+    fab.style.right = `${right}px`;
+    fab.style.bottom = `${bottom}px`;
+    fab.classList.toggle('user-hidden', Boolean(pref.hidden));
+    positionPanel();
+  }
+
+  async function saveFabPref(update: FabPref): Promise<void> {
+    pref = { ...pref, ...update };
+    applyFabPref();
+    try {
+      const stored = await chrome.storage.local.get(FAB_PREFS_KEY);
+      const prefs = (stored[FAB_PREFS_KEY] as FabPrefs | undefined) ?? {};
+      await chrome.storage.local.set({ [FAB_PREFS_KEY]: { ...prefs, [options.siteKey]: pref } });
+    } catch {
+      // Stale extension context: the position still applies until reload.
+    }
+  }
+
+  void chrome.storage.local.get(FAB_PREFS_KEY).then((stored) => {
+    pref = (stored[FAB_PREFS_KEY] as FabPrefs | undefined)?.[options.siteKey] ?? {};
+    applyFabPref();
+  });
+  // The popup's "show floating button on this site" toggle writes here.
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area !== 'local' || !(FAB_PREFS_KEY in changes)) return;
+    pref = (changes[FAB_PREFS_KEY].newValue as FabPrefs | undefined)?.[options.siteKey] ?? {};
+    applyFabPref();
+  });
+  window.addEventListener('resize', applyFabPref, { passive: true });
+
+  let drag: { x: number; y: number; right: number; bottom: number; moved: boolean } | null = null;
+  let suppressClick = false;
+  fab.addEventListener('pointerdown', (event) => {
+    if (event.button !== 0) return;
+    drag = { x: event.clientX, y: event.clientY, ...fabOffsets(), moved: false };
+    fab.setPointerCapture(event.pointerId);
+  });
+  fab.addEventListener('pointermove', (event) => {
+    if (!drag) return;
+    const dx = event.clientX - drag.x;
+    const dy = event.clientY - drag.y;
+    if (!drag.moved && Math.hypot(dx, dy) < DRAG_THRESHOLD) return;
+    drag.moved = true;
+    fab.classList.add('dragging');
+    pref = { ...pref, right: drag.right - dx, bottom: drag.bottom - dy };
+    applyFabPref();
+  });
+  const endDrag = () => {
+    if (drag?.moved) {
+      suppressClick = true;
+      void saveFabPref(fabOffsets());
+    }
+    drag = null;
+    fab.classList.remove('dragging');
+  };
+  fab.addEventListener('pointerup', endDrag);
+  fab.addEventListener('pointercancel', endDrag);
+
+  fab.addEventListener('click', () => {
+    if (suppressClick) {
+      suppressClick = false;
+      return;
+    }
+    positionPanel();
+    panel.classList.toggle('open');
+  });
 
   let currentItems: MediaItem[] = [];
   let youtubeUrl = '';
@@ -170,7 +322,25 @@ export function createPanel(options: PanelOptions): Panel {
     line.textContent = reason ? t(reason) : '';
   }
 
+  let allButton: HTMLButtonElement | null = null;
+
+  /** Listed videos not already saved or in flight ("Download all" targets). */
+  function pendingItems(): MediaItem[] {
+    return currentItems.filter((item) => {
+      const status = statuses.get(item.url);
+      return status !== 'downloading' && status !== 'complete';
+    });
+  }
+
+  function updateAllButton(): void {
+    if (!allButton?.isConnected) return;
+    const count = pendingItems().length;
+    allButton.textContent = t('downloadAll', [String(count)]);
+    allButton.disabled = count === 0;
+  }
+
   function refresh(url: string): void {
+    updateAllButton();
     for (const el of panel.querySelectorAll<HTMLElement>('[data-url]')) {
       if (el.dataset.url !== url) continue;
       if (el instanceof HTMLButtonElement) {
@@ -202,15 +372,48 @@ export function createPanel(options: PanelOptions): Panel {
   function render(): void {
     const badge = fab.querySelector('.badge')!;
     panel.replaceChildren();
+    allButton = null;
 
     const header = document.createElement('div');
     header.className = 'panel-header';
     header.textContent = 'AutoClipper';
+    const headerActions = document.createElement('div');
+    headerActions.className = 'header-actions';
+
+    if (options.mode === 'download' && currentItems.length > 1) {
+      const all = document.createElement('button');
+      all.className = 'all';
+      allButton = all;
+      updateAllButton();
+      all.addEventListener('click', () => {
+        pendingItems().forEach((item, i) =>
+          setTimeout(
+            () => options.onDownload(item.url, item.filename, downloadMetaFor(item)),
+            i * DOWNLOAD_ALL_STAGGER_MS,
+          ),
+        );
+      });
+      headerActions.appendChild(all);
+    }
+
+    const hide = document.createElement('button');
+    hide.className = 'icon';
+    hide.innerHTML = EYE_OFF_ICON;
+    hide.title = t('hideFabTitle');
+    hide.setAttribute('aria-label', t('hideFab'));
+    hide.addEventListener('click', () => {
+      panel.classList.remove('open');
+      void saveFabPref({ hidden: true });
+    });
+    headerActions.appendChild(hide);
+
     const close = document.createElement('button');
-    close.className = 'close';
+    close.className = 'close icon';
     close.textContent = '✕';
+    close.setAttribute('aria-label', t('close'));
     close.addEventListener('click', () => panel.classList.remove('open'));
-    header.appendChild(close);
+    headerActions.appendChild(close);
+    header.appendChild(headerActions);
     panel.appendChild(header);
 
     if (options.mode === 'youtube') {
@@ -266,13 +469,7 @@ export function createPanel(options: PanelOptions): Panel {
         const variants = item.variants?.filter((v) => v.url) ?? [];
         let selectedUrl = item.url;
 
-        const downloadMeta: DownloadMeta = {
-          provider: item.provider,
-          title: item.title,
-          pageUrl: item.pageUrl,
-          // Reddit fallback path: mux the separate audio track in.
-          audioUrl: item.audioUrl,
-        };
+        const downloadMeta = downloadMetaFor(item);
 
         const dl = document.createElement('button');
         dl.className = 'btn';
@@ -287,6 +484,7 @@ export function createPanel(options: PanelOptions): Panel {
         if (variants.length > 1) {
           const select = document.createElement('select');
           select.className = 'quality';
+          select.setAttribute('aria-label', t('qualityLabel'));
           for (const variant of variants) {
             const opt = document.createElement('option');
             opt.value = variant.url;
@@ -325,7 +523,9 @@ export function createPanel(options: PanelOptions): Panel {
         send.href = APP_SEND_URL(item.pageUrl);
         send.target = '_blank';
         send.rel = 'noopener';
-        send.textContent = t('sendToAutoclipperShort');
+        send.title = t('sendToAutoclipperShort');
+        send.setAttribute('aria-label', t('sendToAutoclipperShort'));
+        send.innerHTML = SCISSORS_ICON;
         actions.appendChild(send);
 
         meta.appendChild(actions);
@@ -377,6 +577,10 @@ export function createPanel(options: PanelOptions): Panel {
       if (statuses.get(url) !== 'downloading') return;
       statuses.delete(url);
       refresh(url);
+    },
+    open() {
+      positionPanel();
+      panel.classList.add('open');
     },
     showStaleNotice() {
       // The i18n bundle is unreachable once the context is invalidated, so

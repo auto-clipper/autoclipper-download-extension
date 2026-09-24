@@ -1,26 +1,10 @@
 import { defineManifest } from '@crxjs/vite-plugin';
-
-const SOCIAL_MATCHES = [
-  'https://www.instagram.com/*',
-  'https://instagram.com/*',
-  'https://www.tiktok.com/*',
-  'https://tiktok.com/*',
-  'https://twitter.com/*',
-  'https://x.com/*',
-  'https://www.twitch.tv/*',
-  'https://m.twitch.tv/*',
-  'https://clips.twitch.tv/*',
-];
-
-const REDDIT_MATCHES = [
-  'https://www.reddit.com/*',
-  'https://old.reddit.com/*',
-  'https://reddit.com/*',
-];
-
-const YOUTUBE_MATCHES = ['https://www.youtube.com/*', 'https://m.youtube.com/*'];
-
-const AUTOCLIPPER_APP_MATCHES = ['https://app.autoclipper.live/*'];
+import {
+  AUTOCLIPPER_APP_MATCHES,
+  REDDIT_MATCHES,
+  SOCIAL_MATCHES,
+  YOUTUBE_MATCHES,
+} from './shared/sites';
 
 export default defineManifest({
   manifest_version: 3,
@@ -69,5 +53,12 @@ export default defineManifest({
       run_at: 'document_idle',
     },
   ],
-  permissions: ['downloads', 'storage', 'offscreen'],
+  // contextMenus: "Download this video" on right-click (no install warning).
+  permissions: ['downloads', 'storage', 'offscreen', 'contextMenus'],
+  commands: {
+    'download-video': {
+      suggested_key: { default: 'Alt+Shift+D' },
+      description: '__MSG_commandDownload__',
+    },
+  },
 });

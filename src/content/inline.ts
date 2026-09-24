@@ -25,7 +25,13 @@ export interface InlineButtons {
   setItems(items: MediaItem[]): void;
   setStatus(url: string, status: DownloadStatus, error?: string): void;
   resetIfDownloading(url: string): void;
+  /** Show/hide the hover pills. Pairing keeps running (menu + shortcut use it). */
   setEnabled(enabled: boolean): void;
+  /**
+   * The item a download gesture refers to: the player under `point` (or
+   * under the pointer), else the most prominent player on screen.
+   */
+  targetItem(point?: { x: number; y: number }): MediaItem | undefined;
 }
 
 /** Reddit's shreddit players keep their <video> in a shadow root; anchor on the host. */
@@ -162,6 +168,8 @@ export function createInlineButtons(options: InlineOptions): InlineButtons {
   const entries = new Map<Element, Entry>();
   let pointer: { x: number; y: number } | null = null;
   let lastVisible = '';
+  /** Paired items on screen, most prominent first (see reportVisible). */
+  let visibleItems: MediaItem[] = [];
   let frame = 0;
 
   const attach = () => {
@@ -244,9 +252,10 @@ export function createInlineButtons(options: InlineOptions): InlineButtons {
       const r = el.getBoundingClientRect();
       return Math.abs(r.top + r.height / 2 - centre);
     };
-    const ids = [...paired]
+    visibleItems = [...paired]
       .sort(([a], [b]) => distance(a) - distance(b))
-      .map(([, item]) => item.id);
+      .map(([, item]) => item);
+    const ids = visibleItems.map((item) => item.id);
     const key = ids.join('|');
     if (key === lastVisible) return;
     lastVisible = key;
@@ -255,7 +264,7 @@ export function createInlineButtons(options: InlineOptions): InlineButtons {
 
   /** Re-pair players with items; runs on a slow interval (DOM walk is not free). */
   function scan(): void {
-    if (!enabled || !items.length) {
+    if (!items.length) {
       for (const entry of entries.values()) entry.pill.remove();
       entries.clear();
       return;
@@ -318,6 +327,7 @@ export function createInlineButtons(options: InlineOptions): InlineButtons {
         pointer.y <= rect.bottom;
       const busy = statuses.has(entry.item.url);
       const show =
+        enabled &&
         player.isConnected &&
         !document.fullscreenElement &&
         (hovered || busy) &&
@@ -395,6 +405,19 @@ export function createInlineButtons(options: InlineOptions): InlineButtons {
     setEnabled(next: boolean) {
       enabled = next;
       scan();
+    },
+    targetItem(point?: { x: number; y: number }) {
+      scan();
+      const at = point ?? pointer;
+      if (at) {
+        for (const [player, entry] of entries) {
+          const r = player.getBoundingClientRect();
+          if (at.x >= r.left && at.x <= r.right && at.y >= r.top && at.y <= r.bottom) {
+            return entry.item;
+          }
+        }
+      }
+      return visibleItems[0];
     },
   };
 }
