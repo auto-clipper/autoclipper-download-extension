@@ -6,7 +6,7 @@ AutoClipper Video Downloader
 
 ## Summary (max 132 chars)
 
-Download videos from Instagram, TikTok, Reddit and X in one click. Free, fast, no watermark added. By autoclipper.live.
+Download videos from Instagram, TikTok, Reddit, X and Twitch in one click. Free, no watermark added. By autoclipper.live.
 
 ## Description
 
@@ -23,9 +23,15 @@ Download videos from your favorite social networks in one click — right from t
 Choose exactly which resolution to save — from 360p up to the highest the site offers.
 
 ▶️ HOW IT WORKS
-1. Browse Instagram, TikTok, Reddit or X normally
-2. When a video is detected, the AutoClipper button appears in the corner of the page
-3. Click it and choose "Download video" — done, the MP4 is in your Downloads folder
+1. Browse Instagram, TikTok, Reddit, X or Twitch normally
+2. Hover any video — a "Download" button appears right on it
+3. Click it — done, the MP4 is in your Downloads folder
+
+⚡ EVEN FASTER
+• Right-click a video → "Download this video"
+• Press Alt+Shift+D to download the video you're watching
+• "Download all" saves every video on the page at once
+• Every detected video is also listed in the AutoClipper button in the corner (drag it anywhere, or hide it per site)
 
 ✨ WHY THIS EXTENSION
 • 100% free, no registration
@@ -35,7 +41,7 @@ Choose exactly which resolution to save — from 360p up to the highest the site
 • We don't collect, store or sell any personal data
 
 🎬 WANT TO TURN VIDEOS INTO VIRAL CLIPS?
-This extension is made by AutoClipper (https://autoclipper.live) — the platform that cuts, captions and publishes viral clips automatically. On YouTube, the extension shows you a shortcut to clip any video with AutoClipper.
+This extension is made by AutoClipper (https://autoclipper.live) — the platform that cuts, captions and publishes viral clips automatically. On YouTube, Instagram and Twitch, one click sends the video to AutoClipper to turn it into clips.
 
 Note: this extension does not download YouTube videos, in compliance with Chrome Web Store policies. Download only content you have the right to save.
 
