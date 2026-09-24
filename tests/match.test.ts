@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { MediaItem } from '@/shared/types';
-import { itemForLocation, itemTokens, matchItem } from '@/content/match';
+import { MAX_ITEMS, itemForLocation, itemTokens, matchItem, orderItems } from '@/content/match';
 
 const item = (id: string, pageUrl: string): MediaItem => ({
   id,
@@ -61,5 +61,34 @@ describe('itemForLocation', () => {
       reel,
     );
     expect(itemForLocation('https://www.instagram.com/', [reel])).toBeUndefined();
+  });
+});
+
+describe('orderItems', () => {
+  const detected = ['a', 'b', 'c', 'd'].map((n) =>
+    item(`tiktok:video-${n}0000`, 'https://www.tiktok.com/'),
+  );
+  const ids = (list: MediaItem[]) => list.map((i) => i.id.slice(-6, -4));
+
+  it('lists newest first when nothing is on screen', () => {
+    expect(ids(orderItems(detected, []))).toEqual(['-d', '-c', '-b', '-a']);
+  });
+
+  it('puts on-screen videos first, in prominence order', () => {
+    expect(ids(orderItems(detected, ['tiktok:video-b0000', 'tiktok:video-a0000']))).toEqual([
+      '-b',
+      '-a',
+      '-d',
+      '-c',
+    ]);
+  });
+
+  it(`keeps at most ${MAX_ITEMS} items, dropping the oldest`, () => {
+    const many = Array.from({ length: MAX_ITEMS + 5 }, (_, i) =>
+      item(`tiktok:video-${i}-00000`, 'x'),
+    );
+    const ordered = orderItems(many, []);
+    expect(ordered).toHaveLength(MAX_ITEMS);
+    expect(ordered.at(-1)!.id).toBe('tiktok:video-5-00000');
   });
 });

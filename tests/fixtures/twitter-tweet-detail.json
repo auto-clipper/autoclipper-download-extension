@@ -2,6 +2,16 @@
   "data": {
     "tweetResult": {
       "result": {
+        "rest_id": "1812345678901234567",
+        "core": {
+          "user_results": {
+            "result": {
+              "legacy": {
+                "screen_name": "autoclipper"
+              }
+            }
+          }
+        },
         "legacy": {
           "id_str": "1812345678901234567",
           "extended_entities": {
@@ -32,7 +42,8 @@
                 }
               }
             ]
-          }
+          },
+          "full_text": "Clipping tip of the day: cut the silence https://t.co/AbCdEf123"
         }
       }
     }

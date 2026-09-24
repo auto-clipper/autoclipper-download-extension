@@ -15,7 +15,7 @@ describe('instagram', () => {
     const items = instagram.extractFromJson(fixture('instagram-reel.json'), 'https://www.instagram.com/reels/');
     expect(items).toHaveLength(1);
     expect(items[0].url).toContain('reel-hd.mp4');
-    expect(items[0].quality).toBe('720x1280');
+    expect(items[0].quality).toBe('720p');
     expect(items[0].title).toBe('Como viralizar no Instagram em 2026 🚀');
     expect(items[0].pageUrl).toBe('https://www.instagram.com/p/DAbCdEfGhIj/');
     expect(items[0].thumbnail).toContain('thumb.jpg');
@@ -44,8 +44,26 @@ describe('twitter', () => {
     const items = twitter.extractFromJson(fixture('twitter-tweet-detail.json'), 'https://x.com/user/status/1');
     expect(items).toHaveLength(1);
     expect(items[0].url).toContain('720x1280/high.mp4');
-    expect(items[0].quality).toBe('2176kbps');
+    expect(items[0].quality).toBe('720p');
+    expect(items[0].variants!.map((v) => v.quality)).toEqual(['720p', '320p']);
     expect(items[0].thumbnail).toContain('thumb.jpg');
+  });
+
+  it('titles the video with the tweet text and links to the tweet', () => {
+    const items = twitter.extractFromJson(fixture('twitter-tweet-detail.json'), 'https://x.com/home');
+    expect(items[0].title).toBe('Clipping tip of the day: cut the silence');
+    expect(items[0].pageUrl).toBe('https://x.com/autoclipper/status/1812345678901234567');
+    expect(items[0].filename).toBe('autoclipper/twitter-Clipping tip of the day cut the silence.mp4');
+    expect(items[0].id).toBe('twitter:1812345678900000001');
+  });
+
+  it('still extracts media found outside a tweet, untitled', () => {
+    const url = 'https://video.twimg.com/tweet_video/1899999999999999999/a.mp4';
+    const media = { id_str: '1899999999999999999', video_info: { variants: [{ content_type: 'video/mp4', url }] } };
+    const items = twitter.extractFromJson(JSON.stringify({ media }), 'https://x.com/home');
+    expect(items).toHaveLength(1);
+    expect(items[0].title).toBeUndefined();
+    expect(items[0].pageUrl).toBe('https://x.com/home');
   });
 });
 
@@ -114,7 +132,7 @@ describe('variants', () => {
   it('instagram exposes all video versions as variants', () => {
     const items = instagram.extractFromJson(fixture('instagram-reel.json'), 'x');
     expect(items[0].variants).toHaveLength(2);
-    expect(items[0].variants![1].quality).toBe('480x854');
+    expect(items[0].variants![1].quality).toBe('480p');
   });
 
   it('reddit packaged media exposes all permutations as variants, best first', () => {

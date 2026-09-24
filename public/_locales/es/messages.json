@@ -79,5 +79,26 @@
   },
   "inlineButtonsSetting": {
     "message": "Mostrar botón de descarga en los videos"
+  },
+  "errorGeneric": {
+    "message": "La descarga falló. Inténtalo de nuevo."
+  },
+  "errorLinkExpired": {
+    "message": "El enlace del video expiró — recarga la página e inténtalo de nuevo."
+  },
+  "errorFile": {
+    "message": "No se pudo guardar el archivo — revisa la carpeta Descargas y el espacio en disco."
+  },
+  "unsupportedSiteTitle": {
+    "message": "Este sitio no es compatible"
+  },
+  "unsupportedSiteBody": {
+    "message": "AutoClipper Downloader funciona en estos sitios — abre un video allí y aparecerá aquí:"
+  },
+  "historyVideoFrom": {
+    "message": "Video de $1"
+  },
+  "qualityLabel": {
+    "message": "Calidad del video"
   }
 }

@@ -4,24 +4,31 @@ import type {
   BackgroundMessage,
   DownloadMeta,
   DownloadResponse,
-  DownloadStatus,
   MediaItem,
 } from '@/shared/types';
 import { APP_URL, INLINE_BUTTONS_KEY, SITE_URL } from '@/shared/constants';
 import { t, safeHostname, safePathname, sendToAppUrl } from './helpers';
-import { MediaRow } from './MediaRow';
+import { MediaRow, type StatusEntry } from './MediaRow';
+import { providerForHost } from '@/providers/registry';
 import { DownloadHistory } from './DownloadHistory';
 import { ReviewPrompt } from './ReviewPrompt';
 
 const POWERED_URL = `${SITE_URL}/?utm_source=chrome-extension&utm_medium=popup`;
 const LOGIN_URL = `${APP_URL}/login?redirect=%2Fprojects&utm_source=chrome-extension&utm_medium=popup-login`;
 const SUPPORTED_HINT = 'Instagram · TikTok · X · Reddit · Twitch';
+const SUPPORTED_SITES: [string, string][] = [
+  ['Instagram', 'https://www.instagram.com/reels/'],
+  ['TikTok', 'https://www.tiktok.com/'],
+  ['X', 'https://x.com/'],
+  ['Reddit', 'https://www.reddit.com/'],
+  ['Twitch', 'https://www.twitch.tv/directory'],
+];
 
 export function App() {
   const [items, setItems] = useState<MediaItem[]>([]);
   const [pageUrl, setPageUrl] = useState('');
   const [loading, setLoading] = useState(true);
-  const [statuses, setStatuses] = useState<Record<string, DownloadStatus>>({});
+  const [statuses, setStatuses] = useState<Record<string, StatusEntry>>({});
   const [authUser, setAuthUser] = useState<AuthUser | null>(null);
   const [inlineButtons, setInlineButtons] = useState(true);
 
@@ -41,7 +48,13 @@ export function App() {
   useEffect(() => {
     const onMessage = (message: BackgroundMessage) => {
       if (message.type === 'download-status') {
-        setStatuses((prev) => ({ ...prev, [message.url]: message.status }));
+        setStatuses((prev) => {
+          const next = { ...prev };
+          // Cancelled in Chrome's download UI: back to idle, not an error.
+          if (message.status === 'canceled') delete next[message.url];
+          else next[message.url] = { status: message.status, error: message.error };
+          return next;
+        });
       }
     };
     chrome.runtime.onMessage.addListener(onMessage);
@@ -65,12 +78,13 @@ export function App() {
 
   const isYouTube = /(^|\.)youtube\.com$/.test(safeHostname(pageUrl));
   const isWatchPage = isYouTube && /\/watch\b|\/live\//.test(safePathname(pageUrl));
+  const isSupported = isYouTube || Boolean(providerForHost(safeHostname(pageUrl)));
 
   const download = (url: string, filename: string, meta: DownloadMeta) => {
-    setStatuses((prev) => ({ ...prev, [url]: 'downloading' }));
+    setStatuses((prev) => ({ ...prev, [url]: { status: 'downloading' } }));
     const resetIfDownloading = () =>
       setStatuses((prev) => {
-        if (prev[url] !== 'downloading') return prev;
+        if (prev[url]?.status !== 'downloading') return prev;
         const next = { ...prev };
         delete next[url];
         return next;
@@ -81,7 +95,10 @@ export function App() {
         // Only an explicit rejection means the download failed to start;
         // otherwise download-status events settle the outcome.
         if (response && !response.ok) {
-          setStatuses((prev) => ({ ...prev, [url]: 'interrupted' }));
+          setStatuses((prev) => ({
+            ...prev,
+            [url]: { status: 'interrupted', error: response.error },
+          }));
         } else if (!response) {
           setTimeout(resetIfDownloading, 20_000);
         }
@@ -136,6 +153,26 @@ export function App() {
             <br />
             {t('youtubeCtaBody')}
           </a>
+        ) : !isSupported ? (
+          <div className="px-4 py-5">
+            <p className="text-xs font-bold text-[#f4f7fb]">{t('unsupportedSiteTitle')}</p>
+            <p className="mt-1 text-xs leading-relaxed text-[#8a93a3]">
+              {t('unsupportedSiteBody')}
+            </p>
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {SUPPORTED_SITES.map(([name, url]) => (
+                <a
+                  key={name}
+                  href={url}
+                  target="_blank"
+                  rel="noopener"
+                  className="rounded-lg border border-[#23262e] px-2.5 py-1 text-[11px] font-semibold text-[#c5ccd6] no-underline hover:border-[#bfff00]/50 hover:text-[#bfff00]"
+                >
+                  {name}
+                </a>
+              ))}
+            </div>
+          </div>
         ) : items.length === 0 ? (
           <div className="px-4 py-6">
             <p className="text-xs leading-relaxed text-[#8a93a3]">{t('noVideosFound')}</p>
@@ -144,18 +181,12 @@ export function App() {
         ) : (
           <ul className="divide-y divide-[#1a1d24]">
             {items.map((item) => (
-              <MediaRow
-                key={item.id}
-                item={item}
-                status={statuses[item.url]}
-                audioStatus={item.audioUrl ? statuses[item.audioUrl] : undefined}
-                onDownload={download}
-              />
+              <MediaRow key={item.id} item={item} statuses={statuses} onDownload={download} />
             ))}
           </ul>
         )}
 
-        <DownloadHistory />
+        <DownloadHistory onDownload={download} statuses={statuses} />
       </main>
 
       <footer className="border-t border-[#23262e] px-4 py-3">

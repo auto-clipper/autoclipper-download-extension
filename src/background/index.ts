@@ -1,6 +1,7 @@
 import type {
   BackgroundMessage,
   DownloadMeta,
+  DownloadStatus,
   HistoryEntry,
   MediaItem,
 } from '@/shared/types';
@@ -40,6 +41,22 @@ async function setMedia(tabId: number, items: MediaItem[]): Promise<void> {
 async function getHistory(): Promise<HistoryEntry[]> {
   const stored = await chrome.storage.local.get(HISTORY_KEY);
   return (stored[HISTORY_KEY] as HistoryEntry[] | undefined) ?? [];
+}
+
+/** History for the popup, flagging entries whose file is gone ("show in folder" would no-op). */
+async function getHistoryWithFiles(): Promise<HistoryEntry[]> {
+  const history = await getHistory();
+  return Promise.all(
+    history.map(async (entry) => {
+      if (entry.downloadId === undefined) return entry;
+      try {
+        const [item] = await chrome.downloads.search({ id: entry.downloadId });
+        return { ...entry, fileExists: Boolean(item?.exists && item.state === 'complete') };
+      } catch {
+        return entry;
+      }
+    }),
+  );
 }
 
 async function addHistory(entry: HistoryEntry): Promise<void> {
@@ -130,19 +147,22 @@ async function startDownload(
     pageUrl: meta?.pageUrl,
     savedAt: now,
     downloadId,
+    url,
+    audioUrl: meta?.audioUrl,
   });
 
   // The download may already have finished while records were written.
   const [item] = await chrome.downloads.search({ id: downloadId });
   if (item && (item.state === 'complete' || item.state === 'interrupted')) {
-    await notifyDownloadStatus(downloadId, item.state);
+    await notifyDownloadStatus(downloadId, item.state, item.error);
   }
   return downloadId;
 }
 
 async function notifyDownloadStatus(
   downloadId: number,
-  status: 'complete' | 'interrupted',
+  state: 'complete' | 'interrupted',
+  error?: string,
 ): Promise<void> {
   const key = `dl:${downloadId}`;
   const stored = await chrome.storage.session.get(key);
@@ -151,12 +171,14 @@ async function notifyDownloadStatus(
   await chrome.storage.session.remove(key);
   if (entry.blobUrl) revokeBlob(entry.blobUrl);
 
+  const status: DownloadStatus =
+    state === 'interrupted' && error === 'USER_CANCELED' ? 'canceled' : state;
   if (status === 'complete') {
     const { dlCount = 0 } = await chrome.storage.local.get('dlCount');
     await chrome.storage.local.set({ dlCount: dlCount + 1 });
   }
 
-  const message = { type: 'download-status', url: entry.url, status };
+  const message: BackgroundMessage = { type: 'download-status', url: entry.url, status, error };
   if (entry.tabId !== undefined) {
     chrome.tabs.sendMessage(entry.tabId, message).catch(() => {});
   }
@@ -186,7 +208,7 @@ chrome.runtime.onMessage.addListener((message: BackgroundMessage, sender, sendRe
       break;
     }
     case 'get-history': {
-      void getHistory().then(sendResponse);
+      void getHistoryWithFiles().then(sendResponse);
       return true;
     }
     case 'clear-history': {
@@ -210,7 +232,7 @@ chrome.runtime.onMessage.addListener((message: BackgroundMessage, sender, sendRe
 chrome.downloads.onChanged.addListener((delta) => {
   const state = delta.state?.current;
   if (state !== 'complete' && state !== 'interrupted') return;
-  void notifyDownloadStatus(delta.id, state);
+  void notifyDownloadStatus(delta.id, state, delta.error?.current);
 });
 
 // --- Tab lifecycle ---

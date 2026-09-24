@@ -79,5 +79,26 @@
   },
   "inlineButtonsSetting": {
     "message": "Show download button on videos"
+  },
+  "errorGeneric": {
+    "message": "Download failed. Try again."
+  },
+  "errorLinkExpired": {
+    "message": "The video link expired — refresh the page and try again."
+  },
+  "errorFile": {
+    "message": "Couldn't save the file — check your Downloads folder and free disk space."
+  },
+  "unsupportedSiteTitle": {
+    "message": "This site isn't supported"
+  },
+  "unsupportedSiteBody": {
+    "message": "AutoClipper Downloader works on these sites — open a video there and it shows up here:"
+  },
+  "historyVideoFrom": {
+    "message": "$1 video"
+  },
+  "qualityLabel": {
+    "message": "Video quality"
   }
 }
