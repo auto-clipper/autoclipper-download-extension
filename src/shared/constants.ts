@@ -14,3 +14,6 @@ export const STORE_REVIEW_URL = `${STORE_LISTING_URL}/reviews`;
 
 /** Downloads before the popup offers a review prompt. */
 export const REVIEW_PROMPT_THRESHOLD = 4;
+
+/** chrome.storage.local flag: show download buttons on video players (default on). */
+export const INLINE_BUTTONS_KEY = 'inlineButtons';

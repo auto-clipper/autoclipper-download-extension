@@ -16,6 +16,7 @@ Chrome MV3 extension. Read `README.md` first for architecture; this file only ad
 - The MAIN-world interceptor must stay observation-only: never modify requests/responses, never break page behavior. Guard everything in try/catch.
 - UI strings go through `chrome.i18n` — add every new key to **both** `public/_locales/en/messages.json` and `public/_locales/pt_BR/messages.json`.
 - The panel renders inside a closed shadow root; keep styles self-contained (no page CSS leakage in either direction).
+- The on-video buttons (`src/content/inline.ts`) float in their own fixed layer and never inject into site player markup. Player↔item pairing stays in the pure `src/content/match.ts` (unit-tested in `tests/match.test.ts`); site-specific DOM quirks go into `contextLevels()`, not the matcher.
 
 ## Landing page
 

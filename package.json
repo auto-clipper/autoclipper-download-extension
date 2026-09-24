@@ -1,6 +1,6 @@
 {
   "name": "autoclipper-download-extension",
-  "version": "0.1.0",
+  "version": "0.4.0",
   "private": true,
   "type": "module",
   "description": "AutoClipper Video Downloader — Chrome extension to download videos from Instagram, TikTok, Reddit, X and more.",

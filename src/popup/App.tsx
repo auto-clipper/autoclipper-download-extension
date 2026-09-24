@@ -7,7 +7,7 @@ import type {
   DownloadStatus,
   MediaItem,
 } from '@/shared/types';
-import { APP_URL, SITE_URL } from '@/shared/constants';
+import { APP_URL, INLINE_BUTTONS_KEY, SITE_URL } from '@/shared/constants';
 import { t, safeHostname, safePathname, sendToAppUrl } from './helpers';
 import { MediaRow } from './MediaRow';
 import { DownloadHistory } from './DownloadHistory';
@@ -23,12 +23,20 @@ export function App() {
   const [loading, setLoading] = useState(true);
   const [statuses, setStatuses] = useState<Record<string, DownloadStatus>>({});
   const [authUser, setAuthUser] = useState<AuthUser | null>(null);
+  const [inlineButtons, setInlineButtons] = useState(true);
 
   useEffect(() => {
-    void chrome.storage.local.get('acAuth').then((stored) => {
+    void chrome.storage.local.get(['acAuth', INLINE_BUTTONS_KEY]).then((stored) => {
       setAuthUser((stored.acAuth as AuthUser | null) ?? null);
+      setInlineButtons(stored[INLINE_BUTTONS_KEY] !== false);
     });
   }, []);
+
+  const toggleInlineButtons = (enabled: boolean) => {
+    setInlineButtons(enabled);
+    // Content scripts listen on storage.onChanged and update open tabs live.
+    void chrome.storage.local.set({ [INLINE_BUTTONS_KEY]: enabled });
+  };
 
   useEffect(() => {
     const onMessage = (message: BackgroundMessage) => {
@@ -151,6 +159,15 @@ export function App() {
       </main>
 
       <footer className="border-t border-[#23262e] px-4 py-3">
+        <label className="mb-3 flex cursor-pointer items-center justify-between gap-3 text-xs text-[#8a93a3]">
+          {t('inlineButtonsSetting')}
+          <input
+            type="checkbox"
+            checked={inlineButtons}
+            onChange={(event) => toggleInlineButtons(event.target.checked)}
+            className="h-4 w-4 cursor-pointer accent-[#bfff00]"
+          />
+        </label>
         <div className="mb-2 flex items-center justify-between gap-2">
           {authUser ? (
             <a

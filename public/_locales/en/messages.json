@@ -73,5 +73,11 @@
   },
   "poweredBy": {
     "message": "Powered by AutoClipper — turn videos into viral clips →"
+  },
+  "inlineDownload": {
+    "message": "Download"
+  },
+  "inlineButtonsSetting": {
+    "message": "Show download button on videos"
   }
 }

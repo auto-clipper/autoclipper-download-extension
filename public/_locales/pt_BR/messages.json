@@ -73,5 +73,11 @@
   },
   "poweredBy": {
     "message": "Feito pelo AutoClipper — transforme vídeos em cortes virais →"
+  },
+  "inlineDownload": {
+    "message": "Baixar"
+  },
+  "inlineButtonsSetting": {
+    "message": "Mostrar botão de download nos vídeos"
   }
 }

@@ -5,9 +5,9 @@ interface PanelOptions {
   onDownload: (url: string, filename: string, meta?: DownloadMeta) => void;
 }
 
-const APP_SEND_URL = (pageUrl: string) =>
+export const APP_SEND_URL = (pageUrl: string, medium = 'panel-send') =>
   `https://app.autoclipper.live/projects?video=${encodeURIComponent(pageUrl)}` +
-  `&utm_source=chrome-extension&utm_medium=panel-send`;
+  `&utm_source=chrome-extension&utm_medium=${medium}`;
 
 interface Panel {
   setItems(items: MediaItem[]): void;
