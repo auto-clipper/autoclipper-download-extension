@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { DownloadMeta, DownloadStatus, MediaItem } from '@/shared/types';
 import { failureReasonKey, providerName } from '@/shared/labels';
+import { canSendToApp } from '@/shared/constants';
 import { t, sendToAppUrl } from './helpers';
 import { Thumbnail } from './Thumbnail';
 
@@ -94,14 +95,16 @@ export function MediaRow({ item, statuses, onDownload }: MediaRowProps) {
             </button>
           )}
 
-          <a
-            href={sendToAppUrl(item.pageUrl, 'popup-item-send')}
-            target="_blank"
-            rel="noopener"
-            className="rounded-lg border border-[#00e5ff]/40 px-3 py-1.5 text-xs font-bold text-[#00e5ff] no-underline hover:bg-[#00e5ff]/10"
-          >
-            {t('sendToAutoclipperShort')}
-          </a>
+          {canSendToApp(item.provider) && (
+            <a
+              href={sendToAppUrl(item.pageUrl, 'popup-item-send')}
+              target="_blank"
+              rel="noopener"
+              className="rounded-lg border border-[#00e5ff]/40 px-3 py-1.5 text-xs font-bold text-[#00e5ff] no-underline hover:bg-[#00e5ff]/10"
+            >
+              {t('sendToAutoclipperShort')}
+            </a>
+          )}
         </div>
         {failure && (
           <p className="mt-1.5 text-[11px] leading-snug text-[#ff6b6b]">

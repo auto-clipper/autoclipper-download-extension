@@ -1,6 +1,6 @@
 import type { DownloadMeta, DownloadStatus, MediaItem } from '@/shared/types';
 import { failureReasonKey, providerName } from '@/shared/labels';
-import { FAB_PREFS_KEY, type FabPref, type FabPrefs } from '@/shared/constants';
+import { FAB_PREFS_KEY, canSendToApp, type FabPref, type FabPrefs } from '@/shared/constants';
 
 interface PanelOptions {
   mode: 'download' | 'youtube';
@@ -517,16 +517,19 @@ export function createPanel(options: PanelOptions): Panel {
           actions.appendChild(audio);
         }
 
-        // Send to AutoClipper: process this video into clips in the app.
-        const send = document.createElement('a');
-        send.className = 'btn send';
-        send.href = APP_SEND_URL(item.pageUrl);
-        send.target = '_blank';
-        send.rel = 'noopener';
-        send.title = t('sendToAutoclipperShort');
-        send.setAttribute('aria-label', t('sendToAutoclipperShort'));
-        send.innerHTML = SCISSORS_ICON;
-        actions.appendChild(send);
+        // Send to AutoClipper: process this video into clips in the app
+        // (only for sources the app can import).
+        if (canSendToApp(item.provider)) {
+          const send = document.createElement('a');
+          send.className = 'btn send';
+          send.href = APP_SEND_URL(item.pageUrl);
+          send.target = '_blank';
+          send.rel = 'noopener';
+          send.title = t('sendToAutoclipperShort');
+          send.setAttribute('aria-label', t('sendToAutoclipperShort'));
+          send.innerHTML = SCISSORS_ICON;
+          actions.appendChild(send);
+        }
 
         meta.appendChild(actions);
         const err = document.createElement('div');

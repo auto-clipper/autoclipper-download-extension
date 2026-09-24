@@ -18,6 +18,7 @@ import { t, safePathname, sendToAppUrl } from './helpers';
 import { MediaRow, type StatusEntry } from './MediaRow';
 import { DownloadHistory } from './DownloadHistory';
 import { ReviewPrompt } from './ReviewPrompt';
+import { UserAvatar } from './UserAvatar';
 
 const POWERED_URL = `${SITE_URL}/?utm_source=chrome-extension&utm_medium=popup`;
 const LOGIN_URL = `${APP_URL}/login?redirect=%2Fprojects&utm_source=chrome-extension&utm_medium=popup-login`;
@@ -289,9 +290,7 @@ export function App() {
               rel="noopener"
               className="flex min-w-0 items-center gap-2 text-xs text-[#8a93a3] no-underline hover:text-[#bfff00]"
             >
-              <span className="inline-flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#bfff00] to-[#00e5ff] text-[10px] font-bold text-[#0b0d11]">
-                {(authUser.username ?? authUser.email ?? '?').charAt(0).toUpperCase()}
-              </span>
+              <UserAvatar user={authUser} />
               <span className="truncate">
                 {t('loggedInAs', [authUser.username ?? authUser.email ?? ''])}
               </span>

@@ -30,6 +30,8 @@ export type DownloadStatus = 'downloading' | 'complete' | 'interrupted' | 'cance
 export interface AuthUser {
   username?: string | null;
   email?: string | null;
+  /** Avatar URL the app caches in localStorage.profilePictureUrl. */
+  avatarUrl?: string | null;
 }
 
 export interface DownloadMeta {
