@@ -73,5 +73,11 @@
   },
   "poweredBy": {
     "message": "Hecho por AutoClipper — convierte vídeos en clips virales →"
+  },
+  "inlineDownload": {
+    "message": "Descargar"
+  },
+  "inlineButtonsSetting": {
+    "message": "Mostrar botón de descarga en los videos"
   }
 }

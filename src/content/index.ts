@@ -1,13 +1,17 @@
 import type {
   BackgroundMessage,
+  DownloadMeta,
   DownloadResponse,
+  DownloadStatus,
   InterceptorPayload,
   MediaItem,
 } from '@/shared/types';
 import { providerForHost } from '@/providers/registry';
 import { extractFromPackagedMedia } from '@/providers/reddit';
 import { extractTikTokFromRehydration } from '@/providers/tiktok';
-import { createPanel } from './panel';
+import { createInlineButtons } from './inline';
+import { APP_SEND_URL, createPanel } from './panel';
+import { INLINE_BUTTONS_KEY } from '@/shared/constants';
 
 const host = window.location.hostname;
 const isYouTube = host.endsWith('youtube.com');
@@ -25,38 +29,67 @@ function isStaleContext(error: unknown): boolean {
   return String(error).includes('Extension context invalidated');
 }
 
-const panel = createPanel({
-  mode: isYouTube ? 'youtube' : 'download',
-  onDownload: (url, filename, meta) => {
-    panel.setStatus(url, 'downloading');
-    try {
-      chrome.runtime
-        .sendMessage({ type: 'download', url, filename, now: Date.now(), meta })
-        .then((response: DownloadResponse | undefined) => {
-          // Only an explicit rejection means the download failed to start.
-          // An undefined response is a messaging anomaly — the download is
-          // usually running; let download-status events settle the outcome,
-          // but fall back to idle so the button never hangs on the spinner.
-          if (response && !response.ok) {
-            panel.setStatus(url, 'interrupted');
-          } else if (!response) {
-            setTimeout(() => panel.resetIfDownloading(url), 20_000);
-          }
-        })
-        .catch((error) => {
-          if (isStaleContext(error)) panel.showStaleNotice();
-          else setTimeout(() => panel.resetIfDownloading(url), 20_000);
-        });
-    } catch (error) {
-      if (isStaleContext(error)) panel.showStaleNotice();
-      else panel.setStatus(url, 'interrupted');
+function setStatus(url: string, status: DownloadStatus): void {
+  panel.setStatus(url, status);
+  inline?.setStatus(url, status);
+}
+
+function resetIfDownloading(url: string): void {
+  panel.resetIfDownloading(url);
+  inline?.resetIfDownloading(url);
+}
+
+function download(url: string, filename: string, meta?: DownloadMeta): void {
+  setStatus(url, 'downloading');
+  try {
+    chrome.runtime
+      .sendMessage({ type: 'download', url, filename, now: Date.now(), meta })
+      .then((response: DownloadResponse | undefined) => {
+        // Only an explicit rejection means the download failed to start.
+        // An undefined response is a messaging anomaly — the download is
+        // usually running; let download-status events settle the outcome,
+        // but fall back to idle so the button never hangs on the spinner.
+        if (response && !response.ok) {
+          setStatus(url, 'interrupted');
+        } else if (!response) {
+          setTimeout(() => resetIfDownloading(url), 20_000);
+        }
+      })
+      .catch((error) => {
+        if (isStaleContext(error)) panel.showStaleNotice();
+        else setTimeout(() => resetIfDownloading(url), 20_000);
+      });
+  } catch (error) {
+    if (isStaleContext(error)) panel.showStaleNotice();
+    else setStatus(url, 'interrupted');
+  }
+}
+
+const panel = createPanel({ mode: isYouTube ? 'youtube' : 'download', onDownload: download });
+
+// On-video download buttons (not on YouTube: CTA only, never downloads).
+const inline = isYouTube
+  ? null
+  : createInlineButtons({
+      onDownload: download,
+      sendUrl: (pageUrl) => APP_SEND_URL(pageUrl, 'inline-send'),
+    });
+
+// Users can turn the on-video buttons off from the popup.
+if (inline) {
+  void chrome.storage.local.get(INLINE_BUTTONS_KEY).then((stored) => {
+    inline.setEnabled(stored[INLINE_BUTTONS_KEY] !== false);
+  });
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area === 'local' && INLINE_BUTTONS_KEY in changes) {
+      inline.setEnabled(changes[INLINE_BUTTONS_KEY].newValue !== false);
     }
-  },
-});
+  });
+}
 
 chrome.runtime.onMessage.addListener((message: BackgroundMessage) => {
   if (message.type === 'download-status') {
-    panel.setStatus(message.url, message.status);
+    setStatus(message.url, message.status);
   }
 });
 
@@ -71,6 +104,7 @@ function addItems(found: MediaItem[]): void {
   if (!changed) return;
   const all = [...items.values()];
   panel.setItems(all);
+  inline?.setItems(all);
   void chrome.runtime.sendMessage({ type: 'media-found', items: all });
 }
 

@@ -5,6 +5,7 @@ Chrome (MV3) extension that downloads videos from **Instagram, TikTok, Reddit, X
 ## Features
 
 - **One-click downloads** from Instagram, TikTok, Reddit, X and Twitch clips (client-side; no server).
+- **On-video download button** — hovering a video player shows a "Download" button (plus a "Send to AutoClipper" scissors button) right on the video. Can be turned off from the popup.
 - **Quality picker** — pick from every rendition the site exposes (Reddit permutations, X bitrates, Instagram versions, Twitch qualities).
 - **Reddit audio muxing** — separate DASH/CMAF video + audio tracks are fetched and muxed into one MP4 in an offscreen document (mp4box.js). Falls back to a video-only + separate-audio download if muxing fails.
 - **Send to AutoClipper** — every detected video (and long-form YouTube pages) links into the app at `/projects?video=<url>` to turn it into captioned clips.
@@ -21,6 +22,7 @@ Landing page (GitHub Pages, served from `docs/`): https://auto-clipper.github.io
 - A **MAIN-world interceptor** (`src/interceptor/`) observes `fetch`/XHR JSON responses on Instagram, TikTok and X — these sites only expose real MP4 URLs inside API payloads (the `<video>` tags use `blob:` URLs).
 - **Providers** (`src/providers/`) are pure extractor functions that fish media descriptors out of those payloads. One module per site, unit-tested against fixtures in `tests/fixtures/`.
 - The **content script** (`src/content/`) merges detections, renders the floating panel (shadow DOM, closed root) and relays items to the background worker. Reddit is handled here by fetching the post's public `<permalink>.json`. TikTok's server-rendered first video is read from the `__UNIVERSAL_DATA_FOR_REHYDRATION__` script tag.
+- The **inline buttons** (`src/content/inline.ts`) float a Download / Send-to-AutoClipper pill over each visible video player while it is hovered. They live in their own fixed-position closed-shadow layer that tracks each player's bounding box (site players clip overflow and re-render their markup). Players are paired with detected items by `src/content/match.ts` — a pure matcher that looks for an item's media id / post path in the player's poster, its ancestors' ids/`permalink` attributes and the links inside its post, nearest first; single-video pages fall back to the id in the URL. Reddit anchors on the `shreddit-player` host (its `<video>` sits in a shadow root). Disabled via the `inlineButtons` flag in `chrome.storage.local` (popup toggle).
 - The **background service worker** (`src/background/`) stores detected media per tab in `chrome.storage.session`, sets the badge count, performs downloads via `chrome.downloads` (browser downloads carry the user's cookies, which signed CDN URLs often require), maintains the download history, tracks the review-prompt counter, and opens the install page / sets the uninstall URL.
 - The **offscreen document** (`src/offscreen/`) fetches and muxes Reddit's separate video + audio tracks into one MP4 (`src/lib/mux.ts`, mp4box.js). The MV3 service worker can't create blob URLs, so muxing lives here; the resulting `blob:` URL is handed to `chrome.downloads`.
 - The **popup** (`src/popup/`, React + Tailwind) mirrors the panel for the active tab.
@@ -53,6 +55,7 @@ Load in Chrome: `chrome://extensions` → enable Developer mode → "Load unpack
 - [ ] X: open a tweet with video → highest-quality MP4 downloads
 - [ ] Reddit: open a v.redd.it post → video downloads; audio button appears when the post has audio
 - [ ] YouTube: panel shows the AutoClipper CTA and links to autoclipper.live with the video URL
+- [ ] Hovering a video shows the on-video Download button; it downloads *that* video (check a feed with several videos on X, Reddit, Instagram and TikTok); it hides behind page modals and when the popup toggle is off
 - [ ] Popup mirrors the page's detected videos; badge shows the count
 - [ ] Both locales render (`chrome://settings/languages` → move pt-BR to top to test)
 
