@@ -6,7 +6,7 @@ AutoClipper Video Downloader
 
 ## Summary (max 132 chars)
 
-Download videos from Instagram, TikTok, Reddit, X and Twitch in one click. Free, no watermark added. By autoclipper.live.
+Download videos from Instagram, TikTok, Reddit, X and Twitch in one click. No watermark added. By autoclipper.live.
 
 ## Description
 
@@ -34,7 +34,7 @@ Choose exactly which resolution to save — from 360p up to the highest the site
 • Every detected video is also listed in the AutoClipper button in the corner (drag it anywhere, or hide it per site)
 
 ✨ WHY THIS EXTENSION
-• 100% free, no registration
+• No registration
 • No watermarks added to your files
 • No video limit
 • Minimal permissions — it only runs on the supported sites

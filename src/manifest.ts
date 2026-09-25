@@ -12,7 +12,7 @@ export default defineManifest({
   short_name: 'AutoClipper DL',
   description: '__MSG_extDescription__',
   default_locale: 'en',
-  version: '0.4.0',
+  version: '0.4.1',
   minimum_chrome_version: '111',
   homepage_url: 'https://autoclipper.live',
   icons: {
