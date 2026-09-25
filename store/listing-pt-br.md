@@ -6,7 +6,7 @@ AutoClipper Baixar Vídeos
 
 ## Resumo (máx 132 caracteres)
 
-Baixe vídeos do Instagram, TikTok, Reddit, X e Twitch em um clique. Grátis e sem marca d'água. Por autoclipper.live.
+Baixe vídeos do Instagram, TikTok, Reddit, X e Twitch em um clique. Sem marca d'água adicionada. Por autoclipper.live.
 
 ## Descrição
 
@@ -34,7 +34,7 @@ Selecione exatamente qual resolução salvar — de 360p até a melhor que o sit
 • Todos os vídeos detectados também ficam no botão do AutoClipper no canto (arraste para onde quiser, ou oculte por site)
 
 ✨ POR QUE ESTA EXTENSÃO
-• 100% grátis, sem cadastro
+• Sem cadastro
 • Sem marca d'água adicionada aos seus arquivos
 • Sem limite de vídeos
 • Permissões mínimas — só roda nos sites suportados

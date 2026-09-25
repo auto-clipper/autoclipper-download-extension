@@ -25,3 +25,4 @@ Policy notes (do not regress):
 - **Never add YouTube download capability** — instant rejection/takedown (CWS policy + YouTube ToS). YouTube gets the autoclipper.live CTA only.
 - Keep permissions minimal; adding broad host permissions or `webRequest` triggers in-depth review.
 - The extension must not inject ads or affiliate links into pages.
+- **No status/promo keywords in any listing asset** (screenshots, promo tiles, summary, description): no "free", "100% free", "#1", "best", "recommended", "premium", "new", "top" badges or claims. v0.4.0 was rejected ("Red Nickel" — impersonation/misleading metadata) for a "100% free" pill in screenshot 3.
