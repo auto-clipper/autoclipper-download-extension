@@ -1,3 +1,4 @@
+import { captureExtensionError } from '@/lib/sentry';
 import type {
   BackgroundMessage,
   DownloadMeta,
@@ -225,7 +226,10 @@ chrome.runtime.onMessage.addListener((message: BackgroundMessage, sender, sendRe
     case 'download': {
       startDownload(message.url, message.filename, message.now, message.meta, sender.tab?.id)
         .then(() => sendResponse({ ok: true }))
-        .catch((error) => sendResponse({ ok: false, error: String(error) }));
+        .catch(async (error) => {
+          await captureExtensionError(error, 'download');
+          sendResponse({ ok: false, error: String(error) });
+        });
       return true;
     }
   }
