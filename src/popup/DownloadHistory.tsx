@@ -32,7 +32,7 @@ function entryTitle(entry: HistoryEntry): string {
 }
 
 const iconButton =
-  'flex-shrink-0 cursor-pointer text-[#8a93a3] hover:text-[#bfff00] disabled:cursor-default disabled:opacity-50';
+  'flex-shrink-0 cursor-pointer text-[#a4aea6] hover:text-[#b5ff00] disabled:cursor-default disabled:opacity-50';
 
 export function DownloadHistory({ onDownload, statuses }: DownloadHistoryProps) {
   const [history, setHistory] = useState<HistoryEntry[] | null>(null);
@@ -51,14 +51,14 @@ export function DownloadHistory({ onDownload, statuses }: DownloadHistoryProps) 
   if (!history || history.length === 0) return null;
 
   return (
-    <section className="border-t border-[#23262e] px-4 py-3">
+    <section className="border-t border-[#262e29] px-4 py-3">
       <div className="mb-2 flex items-center justify-between">
-        <h2 className="text-[11px] font-bold uppercase tracking-wide text-[#8a93a3]">
+        <h2 className="text-[11px] font-bold uppercase tracking-wide text-[#a4aea6]">
           {t('historyTitle')}
         </h2>
         <button
           onClick={clear}
-          className="cursor-pointer text-[11px] font-semibold text-[#8a93a3] hover:text-[#ff6b6b]"
+          className="cursor-pointer text-[11px] font-semibold text-[#a4aea6] hover:text-[#ff6b6b]"
         >
           {t('historyClear')}
         </button>
@@ -69,10 +69,10 @@ export function DownloadHistory({ onDownload, statuses }: DownloadHistoryProps) 
           return (
             <li key={`${entry.savedAt}-${i}`} className="flex items-center gap-2 text-xs">
               <div className="min-w-0 flex-1">
-                <p className="truncate text-[#c5ccd6]" title={entry.filename}>
+                <p className="truncate text-[#d3dacf]" title={entry.filename}>
                   {entryTitle(entry)}
                 </p>
-                <p className="text-[10px] text-[#5c6470]">
+                <p className="text-[10px] text-[#8d9a90]">
                   {[providerName(entry.provider), timeAgo(entry.savedAt, now)]
                     .filter(Boolean)
                     .join(' · ')}

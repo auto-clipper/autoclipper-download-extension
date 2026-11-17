@@ -77,9 +77,20 @@ export function App() {
   }, []);
 
   useEffect(() => {
+    let active = true;
     void (async () => {
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (!active) return;
       if (tab?.id !== undefined) {
+        const restored = await chrome.tabs
+          .sendMessage(tab.id, { type: 'restore-panel' }, { frameId: 0 })
+          .catch(() => false);
+        if (!active) return;
+        if (restored) {
+          window.close();
+          return;
+        }
+
         // Ask the page itself (see PageInfo): no answer means an unsupported
         // site, or a supported tab still running a pre-update content script.
         const info = (await chrome.tabs
@@ -95,6 +106,9 @@ export function App() {
       }
       setLoading(false);
     })();
+    return () => {
+      active = false;
+    };
   }, []);
 
   const isYouTube = siteKey === 'youtube';
@@ -161,22 +175,15 @@ export function App() {
   };
 
   return (
-    <div className="w-[360px] bg-[#0b0d11] text-[#f4f7fb] font-sans">
-      <header className="flex items-center gap-2 border-b border-[#23262e] px-4 py-3">
-        <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-[#bfff00] to-[#00e5ff]">
-          <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none">
-            <path
-              d="M12 3v10m0 0l-4-4m4 4l4-4"
-              stroke="#0b0d11"
-              strokeWidth="2.4"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path d="M5 17h14v3H5z" fill="#0b0d11" />
-          </svg>
-        </span>
-        <h1 className="text-sm font-bold tracking-tight">
-          AutoClipper <span className="text-[#bfff00]">Video Downloader</span>
+    <div className="w-[360px] bg-[#0b100d] text-[#f3f5ea] font-sans">
+      <header className="flex items-center gap-2 border-b border-[#262e29] px-4 py-3">
+        <h1 className="flex w-full items-center justify-between gap-3">
+          <img
+            src={chrome.runtime.getURL('brand/wordmark.svg')}
+            alt="Autoclipper"
+            className="h-auto w-32"
+          />
+          <span className="text-xs font-bold text-[#a4aea6]">{t('popupTitle')}</span>
         </h1>
       </header>
 
@@ -184,15 +191,15 @@ export function App() {
         <ReviewPrompt />
 
         {loading ? (
-          <p className="px-4 py-6 text-xs text-[#8a93a3]">…</p>
+          <p className="px-4 py-6 text-xs text-[#a4aea6]">…</p>
         ) : isWatchPage ? (
           <a
             href={sendToAppUrl(pageUrl, 'popup-send')}
             target="_blank"
             rel="noopener"
-            className="m-4 block rounded-xl border border-[#bfff00]/40 bg-gradient-to-br from-[#bfff00]/10 to-[#00e5ff]/10 p-4 text-xs leading-relaxed no-underline"
+            className="m-4 block rounded-xl border border-[#b5ff00]/40 bg-[#131915] p-4 text-xs leading-relaxed no-underline"
           >
-            <strong className="text-[#bfff00]">{t('sendToAutoclipperTitle')}</strong>
+            <strong className="text-[#b5ff00]">{t('sendToAutoclipperTitle')}</strong>
             <br />
             {t('sendToAutoclipperBody')}
           </a>
@@ -201,16 +208,16 @@ export function App() {
             href={`${SITE_URL}/?utm_source=chrome-extension&utm_medium=popup-youtube&video=${encodeURIComponent(pageUrl)}`}
             target="_blank"
             rel="noopener"
-            className="m-4 block rounded-xl border border-[#bfff00]/40 bg-gradient-to-br from-[#bfff00]/10 to-[#00e5ff]/10 p-4 text-xs leading-relaxed no-underline"
+            className="m-4 block rounded-xl border border-[#b5ff00]/40 bg-[#131915] p-4 text-xs leading-relaxed no-underline"
           >
-            <strong className="text-[#bfff00]">{t('youtubeCtaTitle')}</strong>
+            <strong className="text-[#b5ff00]">{t('youtubeCtaTitle')}</strong>
             <br />
             {t('youtubeCtaBody')}
           </a>
         ) : !isSupported ? (
           <div className="px-4 py-5">
-            <p className="text-xs font-bold text-[#f4f7fb]">{t('unsupportedSiteTitle')}</p>
-            <p className="mt-1 text-xs leading-relaxed text-[#8a93a3]">
+            <p className="text-xs font-bold text-[#f3f5ea]">{t('unsupportedSiteTitle')}</p>
+            <p className="mt-1 text-xs leading-relaxed text-[#a4aea6]">
               {t('unsupportedSiteBody')}
             </p>
             <div className="mt-3 flex flex-wrap gap-1.5">
@@ -220,7 +227,7 @@ export function App() {
                   href={url}
                   target="_blank"
                   rel="noopener"
-                  className="rounded-lg border border-[#23262e] px-2.5 py-1 text-[11px] font-semibold text-[#c5ccd6] no-underline hover:border-[#bfff00]/50 hover:text-[#bfff00]"
+                  className="rounded-lg border border-[#262e29] px-2.5 py-1 text-[11px] font-semibold text-[#d3dacf] no-underline hover:border-[#b5ff00]/50 hover:text-[#b5ff00]"
                 >
                   {name}
                 </a>
@@ -229,23 +236,23 @@ export function App() {
           </div>
         ) : items.length === 0 ? (
           <div className="px-4 py-6">
-            <p className="text-xs leading-relaxed text-[#8a93a3]">{t('noVideosFound')}</p>
-            <p className="mt-2 text-[11px] text-[#5c6470]">{SUPPORTED_HINT}</p>
+            <p className="text-xs leading-relaxed text-[#a4aea6]">{t('noVideosFound')}</p>
+            <p className="mt-2 text-[11px] text-[#8d9a90]">{SUPPORTED_HINT}</p>
           </div>
         ) : (
           <>
             {items.length > 1 && (
-              <div className="flex justify-end border-b border-[#1a1d24] px-4 py-2">
+              <div className="flex justify-end border-b border-[#1b221e] px-4 py-2">
                 <button
                   onClick={downloadAll}
                   disabled={pendingCount === 0}
-                  className="cursor-pointer rounded-lg bg-[#1a1d24] px-3 py-1.5 text-xs font-bold text-[#bfff00] hover:bg-[#23262e] disabled:cursor-default disabled:opacity-60"
+                  className="cursor-pointer rounded-lg bg-[#1b221e] px-3 py-1.5 text-xs font-bold text-[#b5ff00] hover:bg-[#262e29] disabled:cursor-default disabled:opacity-60"
                 >
                   {t('downloadAll', [String(pendingCount)])}
                 </button>
               </div>
             )}
-            <ul className="divide-y divide-[#1a1d24]">
+            <ul className="divide-y divide-[#1b221e]">
               {items.map((item) => (
                 <MediaRow key={item.id} item={item} statuses={statuses} onDownload={download} />
               ))}
@@ -256,29 +263,29 @@ export function App() {
         <DownloadHistory onDownload={download} statuses={statuses} />
       </main>
 
-      <footer className="border-t border-[#23262e] px-4 py-3">
-        <label className="mb-3 flex cursor-pointer items-center justify-between gap-3 text-xs text-[#8a93a3]">
+      <footer className="border-t border-[#262e29] px-4 py-3">
+        <label className="mb-3 flex cursor-pointer items-center justify-between gap-3 text-xs text-[#a4aea6]">
           {t('inlineButtonsSetting')}
           <input
             type="checkbox"
             checked={inlineButtons}
             onChange={(event) => toggleInlineButtons(event.target.checked)}
-            className="h-4 w-4 cursor-pointer accent-[#bfff00]"
+            className="h-4 w-4 cursor-pointer accent-[#b5ff00]"
           />
         </label>
         {siteKey && (
-          <label className="mb-3 flex cursor-pointer items-center justify-between gap-3 text-xs text-[#8a93a3]">
+          <label className="mb-3 flex cursor-pointer items-center justify-between gap-3 text-xs text-[#a4aea6]">
             {t('fabSetting')}
             <input
               type="checkbox"
               checked={fabShown}
               onChange={(event) => toggleFab(event.target.checked)}
-              className="h-4 w-4 cursor-pointer accent-[#bfff00]"
+              className="h-4 w-4 cursor-pointer accent-[#b5ff00]"
             />
           </label>
         )}
         {shortcut && siteKey !== 'youtube' && (
-          <p className="mb-3 text-[11px] leading-snug text-[#5c6470]">
+          <p className="mb-3 text-[11px] leading-snug text-[#8d9a90]">
             {t('shortcutTip', [shortcut])}
           </p>
         )}
@@ -288,7 +295,7 @@ export function App() {
               href={`${APP_URL}/projects?utm_source=chrome-extension&utm_medium=popup-account`}
               target="_blank"
               rel="noopener"
-              className="flex min-w-0 items-center gap-2 text-xs text-[#8a93a3] no-underline hover:text-[#bfff00]"
+              className="flex min-w-0 items-center gap-2 text-xs text-[#a4aea6] no-underline hover:text-[#b5ff00]"
             >
               <UserAvatar user={authUser} />
               <span className="truncate">
@@ -300,7 +307,7 @@ export function App() {
               href={LOGIN_URL}
               target="_blank"
               rel="noopener"
-              className="rounded-lg border border-[#bfff00]/50 px-3 py-1.5 text-xs font-bold text-[#bfff00] no-underline hover:bg-[#bfff00]/10"
+              className="rounded-lg border border-[#b5ff00]/50 px-3 py-1.5 text-xs font-bold text-[#b5ff00] no-underline hover:bg-[#b5ff00]/10"
             >
               {t('loginWithAutoclipper')}
             </a>
@@ -310,7 +317,7 @@ export function App() {
           href={POWERED_URL}
           target="_blank"
           rel="noopener"
-          className="text-xs font-semibold text-[#00e5ff] no-underline hover:underline"
+          className="text-xs font-semibold text-[#b5ff00] no-underline hover:underline"
         >
           {t('poweredBy')}
         </a>

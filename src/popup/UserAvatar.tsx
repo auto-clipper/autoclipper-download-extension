@@ -12,14 +12,14 @@ export function UserAvatar({ user }: { user: AuthUser }) {
         alt=""
         referrerPolicy="no-referrer"
         onError={() => setFailed(true)}
-        className={`${base} bg-[#1a1d24] object-cover`}
+        className={`${base} bg-[#1b221e] object-cover`}
       />
     );
   }
   return (
     <span
       aria-hidden
-      className={`${base} inline-flex items-center justify-center bg-gradient-to-br from-[#bfff00] to-[#00e5ff] text-[11px] font-bold text-[#0b0d11]`}
+      className={`${base} inline-flex items-center justify-center bg-gradient-to-br from-[#b5ff00] to-[#b5ff00] text-[11px] font-bold text-[#0b100d]`}
     >
       {(user.username ?? user.email ?? '?').charAt(0).toUpperCase()}
     </span>

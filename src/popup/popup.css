@@ -1,6 +1,10 @@
 @import 'tailwindcss';
 
+@theme {
+  --font-sans: 'Blauer Nue', system-ui, sans-serif;
+}
+
 body {
   margin: 0;
-  background: #0b0d11;
+  background: #0b100d;
 }

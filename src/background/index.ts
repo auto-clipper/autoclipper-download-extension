@@ -37,7 +37,7 @@ async function getMedia(tabId: number): Promise<MediaItem[]> {
 async function setMedia(tabId: number, items: MediaItem[]): Promise<void> {
   await chrome.storage.session.set({ [keyFor(tabId)]: items });
   await chrome.action.setBadgeText({ tabId, text: items.length ? String(items.length) : '' });
-  await chrome.action.setBadgeBackgroundColor({ tabId, color: '#BFFF00' });
+  await chrome.action.setBadgeBackgroundColor({ tabId, color: '#b5ff00' });
 }
 
 // --- Download history ---

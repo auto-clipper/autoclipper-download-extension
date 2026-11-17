@@ -22,6 +22,26 @@ describe('instagram', () => {
     expect(items[0].filename).toMatch(/^autoclipper\/instagram-.+\.mp4$/);
   });
 
+  it('reads guarded Instagram responses', () => {
+    const items = instagram.extractFromJson('for (;;);' + fixture('instagram-reel.json'), 'https://www.instagram.com/');
+    expect(items.map((item) => item.id)).toEqual(['instagram:DAbCdEfGhIj']);
+  });
+
+  it('keeps the post permalink when GraphVideo supplies a shortcode', () => {
+    const body = JSON.stringify({
+      data: {
+        shortcode_media: {
+          shortcode: 'Graph12345',
+          is_video: true,
+          video_url: 'https://scontent.cdninstagram.com/example.mp4',
+        },
+      },
+    });
+    const [item] = instagram.extractFromJson(body, 'https://www.instagram.com/');
+    expect(item.id).toBe('instagram:Graph12345');
+    expect(item.pageUrl).toBe('https://www.instagram.com/p/Graph12345/');
+  });
+
   it('returns [] for payloads without videos', () => {
     expect(instagram.extractFromJson('{"items":[{"pk":"1"}]}', 'x')).toEqual([]);
     expect(instagram.extractFromJson('not json video_versions', 'x')).toEqual([]);

@@ -135,6 +135,9 @@ chrome.runtime.onMessage.addListener((message: BackgroundMessage, _sender, sendR
   if (message.type === 'get-page-info') {
     const info: PageInfo = { url: window.location.href, siteKey };
     sendResponse(info);
+  } else if (message.type === 'restore-panel') {
+    void panel.restoreIfDismissed().then(sendResponse);
+    return true;
   } else if (message.type === 'download-status') {
     setStatus(message.url, message.status, message.error);
   } else if (message.type === 'context-download') {
@@ -170,12 +173,30 @@ function publish(): MediaItem[] {
 
 // --- Interceptor relay (Instagram, TikTok, X) ---
 window.addEventListener('message', (event: MessageEvent) => {
-  if (event.source !== window) return;
+  if (event.source !== window || event.origin !== window.location.origin) return;
   const data = event.data as InterceptorPayload;
   if (data?.source !== 'autoclipper-dl' || data.kind !== 'json-response') return;
   if (!provider) return;
+  if (typeof data.body !== 'string') return;
   addItems(provider.extractFromJson(data.body, window.location.href));
 });
+if (provider && provider.id !== 'reddit') {
+  window.postMessage({ source: 'autoclipper-dl', kind: 'receiver-ready' }, window.location.origin);
+}
+
+// --- Instagram: prefetched Relay data can already be in the document ---
+const scannedInstagramScripts = new WeakSet<HTMLScriptElement>();
+
+function scanInstagramState(): void {
+  if (provider?.id !== 'instagram') return;
+  const scripts = document.querySelectorAll<HTMLScriptElement>('script[type="application/json"]');
+  for (const script of scripts) {
+    const body = script.textContent;
+    if (!body || scannedInstagramScripts.has(script)) continue;
+    scannedInstagramScripts.add(script);
+    addItems(provider.extractFromJson(body, window.location.href));
+  }
+}
 
 // --- TikTok SSR state (first video is server-rendered, no XHR to observe) ---
 function scanTikTokRehydration(): void {
@@ -226,6 +247,7 @@ function scanRedditDom(): void {
 
 function onNavigate(): void {
   if (provider?.id === 'reddit') void scanRedditPost();
+  if (provider?.id === 'instagram') scanInstagramState();
   if (provider?.id === 'tiktok') scanTikTokRehydration();
   if (isYouTube) panel.setYouTubeUrl(window.location.href);
 }

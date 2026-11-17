@@ -74,7 +74,8 @@ export type BackgroundMessage =
    * Popup → content: which page is this? The popup can't read tab.url —
    * that needs the "tabs" permission; content-script matches don't grant it.
    */
-  | { type: 'get-page-info' };
+  | { type: 'get-page-info' }
+  | { type: 'restore-panel' };
 
 export interface PageInfo {
   url: string;

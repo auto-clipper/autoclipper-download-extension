@@ -1,3 +1,4 @@
+import logo from '../../scripts/autoclipper-logo.svg?raw';
 import type { DownloadMeta, DownloadStatus, MediaItem } from '@/shared/types';
 import { failureReasonKey, providerName } from '@/shared/labels';
 import { FAB_PREFS_KEY, canSendToApp, type FabPref, type FabPrefs } from '@/shared/constants';
@@ -49,6 +50,8 @@ interface Panel {
   showStaleNotice(): void;
   /** Open the panel (even when the floating button is hidden on this site). */
   open(): void;
+  /** Undo an explicit dismissal and report whether the toolbar restored the panel. */
+  restoreIfDismissed(): Promise<boolean>;
 }
 
 const t = (key: string, subs?: string[]) => chrome.i18n.getMessage(key, subs) || key;
@@ -65,82 +68,83 @@ const SITE_URL = 'https://autoclipper.live/?utm_source=chrome-extension&utm_medi
 
 const STYLES = `
   :host { all: initial; }
-  * { box-sizing: border-box; margin: 0; font-family: system-ui, -apple-system, sans-serif; }
+  * { box-sizing: border-box; margin: 0; font-family: 'Blauer Nue', system-ui, sans-serif; }
   .fab {
     position: fixed; bottom: 24px; right: 24px; z-index: 2147483646;
     width: 52px; height: 52px; border-radius: 16px; border: none; cursor: pointer;
-    background: linear-gradient(135deg, #bfff00, #00e5ff);
+    background: #003b20;
     display: none; align-items: center; justify-content: center;
-    box-shadow: 0 8px 24px rgba(191, 255, 0, 0.35);
+    border: 1px solid #262e29;
     transition: transform 0.15s ease;
   }
   .fab:hover { transform: scale(1.06); }
   .fab.visible { display: flex; }
   .fab.user-hidden { display: none; }
   .fab.dragging { cursor: grabbing; transform: scale(1.06); transition: none; }
-  .fab svg { width: 26px; height: 26px; }
+  .fab svg { width: 29px; height: 29px; }
   .badge {
     position: absolute; top: -6px; right: -6px; min-width: 20px; height: 20px;
-    border-radius: 10px; background: #0b0d11; color: #bfff00;
+    border-radius: 10px; background: #0b100d; color: #b5ff00;
     font-size: 12px; font-weight: 700; display: flex; align-items: center;
-    justify-content: center; padding: 0 5px; border: 1px solid #bfff00;
+    justify-content: center; padding: 0 5px; border: 1px solid #b5ff00;
   }
   .panel {
     position: fixed; bottom: 88px; right: 24px; z-index: 2147483646;
     width: 340px; max-width: calc(100vw - 16px); max-height: 420px; overflow-y: auto; border-radius: 16px;
-    background: #0b0d11; color: #f4f7fb; border: 1px solid #23262e;
-    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5); display: none;
+    background: #131915; color: #f3f5ea; border: 1px solid #262e29;
+    display: none;
   }
   .panel.open { display: block; }
   .panel-header {
-    padding: 12px 16px; font-size: 13px; font-weight: 700; color: #bfff00;
-    border-bottom: 1px solid #23262e; display: flex; justify-content: space-between;
-    align-items: center;
+    padding: 12px 16px; font-size: 13px; font-weight: 700; color: #b5ff00;
+    border-bottom: 1px solid #262e29; display: flex; justify-content: space-between;
+    align-items: center; gap: 8px;
   }
-  .close { background: none; border: none; color: #8a93a3; cursor: pointer; font-size: 16px; }
+  .wordmark { display: block; width: 120px; max-width: 45%; height: auto; }
+  .close { background: none; border: none; color: #a4aea6; cursor: pointer; font-size: 16px; }
   .header-actions { display: flex; align-items: center; gap: 4px; }
   .icon {
     width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center;
-    background: none; border: none; border-radius: 8px; color: #8a93a3; cursor: pointer;
+    background: none; border: none; border-radius: 8px; color: #a4aea6; cursor: pointer;
   }
-  .icon:hover { background: #1a1d24; color: #f4f7fb; }
+  .icon:hover { background: #1b221e; color: #f3f5ea; }
   .icon svg { width: 16px; height: 16px; }
   .all {
     border: none; border-radius: 8px; padding: 5px 10px; font-size: 11.5px; font-weight: 700;
-    cursor: pointer; background: #1a1d24; color: #bfff00; margin-right: 2px;
+    cursor: pointer; background: #1b221e; color: #b5ff00; margin-right: 2px;
   }
-  .all:hover { background: #23262e; }
+  .all:hover { background: #262e29; }
   .all:disabled { opacity: 0.6; cursor: default; }
-  .item { padding: 12px 16px; border-bottom: 1px solid #1a1d24; display: flex; gap: 10px; }
-  .thumb { width: 48px; height: 48px; border-radius: 8px; object-fit: cover; background: #1a1d24; flex-shrink: 0; }
+  .item { padding: 12px 16px; border-bottom: 1px solid #1b221e; display: flex; gap: 10px; }
+  .thumb { width: 48px; height: 48px; border-radius: 8px; object-fit: cover; background: #1b221e; flex-shrink: 0; }
   .thumb.placeholder {
     display: flex; align-items: center; justify-content: center;
-    color: #5c6470; font-size: 11px; font-weight: 700;
+    color: #8d9a90; font-size: 11px; font-weight: 700;
   }
   .err { margin-top: 6px; font-size: 11px; line-height: 1.4; color: #ff6b6b; }
   .err:empty { display: none; }
   .meta { flex: 1; min-width: 0; }
   .title { font-size: 12.5px; line-height: 1.35; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-  .sub { font-size: 11px; color: #8a93a3; margin-top: 2px; }
+  .sub { font-size: 11px; color: #a4aea6; margin-top: 2px; }
   .actions { margin-top: 8px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
   .btn {
     border: none; border-radius: 8px; padding: 6px 12px; font-size: 12px; font-weight: 700;
-    cursor: pointer; background: #bfff00; color: #0b0d11;
+    cursor: pointer; background: #b5ff00; color: #003b20;
   }
-  .btn.secondary { background: #23262e; color: #f4f7fb; }
+  .btn.secondary { background: #262e29; color: #f3f5ea; }
   .btn.send {
-    background: transparent; color: #00e5ff; border: 1px solid rgba(0,229,255,0.4);
+    background: transparent; color: #b5ff00; border: 1px solid rgba(181, 255, 0, 0.4);
     display: inline-flex; align-items: center; justify-content: center;
     width: 30px; height: 28px; padding: 0;
   }
   .btn.send svg { width: 15px; height: 15px; }
   .btn:hover { filter: brightness(1.1); }
   .quality {
-    background: #1a1d24; color: #f4f7fb; border: 1px solid #23262e; border-radius: 8px;
+    background: #1b221e; color: #f3f5ea; border: 1px solid #262e29; border-radius: 8px;
     padding: 6px 8px; font-size: 12px; font-weight: 600; cursor: pointer;
   }
   .btn:disabled { opacity: 0.75; cursor: default; }
-  .btn.done { background: #23262e; color: #bfff00; }
+  .btn.done { background: #262e29; color: #b5ff00; }
   .btn.failed { background: #2e2326; color: #ff6b6b; }
   .spinner {
     display: inline-block; width: 11px; height: 11px; margin-right: 6px;
@@ -151,22 +155,17 @@ const STYLES = `
   }
   @keyframes acdl-spin { to { transform: rotate(360deg); } }
   .footer { padding: 10px 16px; font-size: 11.5px; }
-  .footer a { color: #00e5ff; text-decoration: none; font-weight: 600; }
+  .footer a { color: #b5ff00; text-decoration: none; font-weight: 600; }
   .cta {
     display: block; margin: 12px 16px; padding: 12px 14px; border-radius: 12px;
-    background: linear-gradient(135deg, rgba(191,255,0,0.12), rgba(0,229,255,0.12));
-    border: 1px solid rgba(191,255,0,0.35); color: #f4f7fb; text-decoration: none;
+    background: #1b221e;
+    border: 1px solid rgba(181, 255, 0, 0.35); color: #f3f5ea; text-decoration: none;
     font-size: 12.5px; line-height: 1.45;
   }
-  .cta strong { color: #bfff00; }
-  .empty { padding: 20px 16px; font-size: 12.5px; color: #8a93a3; }
+  .cta strong { color: #b5ff00; }
+  .empty { padding: 20px 16px; font-size: 12.5px; color: #a4aea6; }
   .stale { padding: 20px 16px; font-size: 12.5px; line-height: 1.5; color: #ffd166; }
 `;
-
-const LOGO_SVG = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M12 3v10m0 0l-4-4m4 4l4-4" stroke="#0b0d11" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M5 17h14v3H5z" fill="#0b0d11"/>
-</svg>`;
 
 /** Thumbnail, or a platform-initials tile when there is none or it fails to load. */
 function thumbnailFor(item: MediaItem): HTMLElement {
@@ -187,6 +186,11 @@ export function createPanel(options: PanelOptions): Panel {
   rootHost.id = 'autoclipper-dl-root';
   const shadow = rootHost.attachShadow({ mode: 'closed' });
 
+  const fonts = document.createElement('link');
+  fonts.rel = 'stylesheet';
+  fonts.href = chrome.runtime.getURL('brand/fonts.css');
+  document.head.appendChild(fonts);
+
   const style = document.createElement('style');
   style.textContent = STYLES;
   shadow.appendChild(style);
@@ -195,7 +199,12 @@ export function createPanel(options: PanelOptions): Panel {
   fab.className = 'fab';
   fab.setAttribute('aria-label', t('fabLabel'));
   fab.title = t('fabLabel');
-  fab.innerHTML = `${LOGO_SVG}<span class="badge">0</span>`;
+  fab.innerHTML = logo;
+  fab.firstElementChild?.setAttribute('aria-hidden', 'true');
+  const badge = document.createElement('span');
+  badge.className = 'badge';
+  badge.textContent = '0';
+  fab.appendChild(badge);
   shadow.appendChild(fab);
 
   const panel = document.createElement('div');
@@ -210,6 +219,7 @@ export function createPanel(options: PanelOptions): Panel {
 
   // --- Floating button: per-platform position + "hide on this site" ---
   let pref: FabPref = {};
+  let dismissed = false;
 
   function fabOffsets(): { right: number; bottom: number } {
     return {
@@ -248,6 +258,7 @@ export function createPanel(options: PanelOptions): Panel {
     fab.style.right = `${right}px`;
     fab.style.bottom = `${bottom}px`;
     fab.classList.toggle('user-hidden', Boolean(pref.hidden));
+    if (pref.hidden) panel.classList.remove('open');
     positionPanel();
   }
 
@@ -263,10 +274,13 @@ export function createPanel(options: PanelOptions): Panel {
     }
   }
 
-  void chrome.storage.local.get(FAB_PREFS_KEY).then((stored) => {
-    pref = (stored[FAB_PREFS_KEY] as FabPrefs | undefined)?.[options.siteKey] ?? {};
-    applyFabPref();
-  });
+  const prefsReady = chrome.storage.local
+    .get(FAB_PREFS_KEY)
+    .then((stored) => {
+      pref = (stored[FAB_PREFS_KEY] as FabPrefs | undefined)?.[options.siteKey] ?? {};
+      applyFabPref();
+    })
+    .catch(() => {});
   // The popup's "show floating button on this site" toggle writes here.
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area !== 'local' || !(FAB_PREFS_KEY in changes)) return;
@@ -308,9 +322,15 @@ export function createPanel(options: PanelOptions): Panel {
       suppressClick = false;
       return;
     }
-    positionPanel();
-    panel.classList.toggle('open');
+    if (panel.classList.contains('open')) panel.classList.remove('open');
+    else open();
   });
+
+  function open(): void {
+    dismissed = false;
+    positionPanel();
+    panel.classList.add('open');
+  }
 
   let currentItems: MediaItem[] = [];
   let youtubeUrl = '';
@@ -370,13 +390,16 @@ export function createPanel(options: PanelOptions): Panel {
   }
 
   function render(): void {
-    const badge = fab.querySelector('.badge')!;
     panel.replaceChildren();
     allButton = null;
 
     const header = document.createElement('div');
     header.className = 'panel-header';
-    header.textContent = 'AutoClipper';
+    const wordmark = document.createElement('img');
+    wordmark.alt = 'Autoclipper';
+    wordmark.className = 'wordmark';
+    wordmark.src = chrome.runtime.getURL('brand/wordmark.svg');
+    header.appendChild(wordmark);
     const headerActions = document.createElement('div');
     headerActions.className = 'header-actions';
 
@@ -411,7 +434,10 @@ export function createPanel(options: PanelOptions): Panel {
     close.className = 'close icon';
     close.textContent = '✕';
     close.setAttribute('aria-label', t('close'));
-    close.addEventListener('click', () => panel.classList.remove('open'));
+    close.addEventListener('click', () => {
+      dismissed = true;
+      panel.classList.remove('open');
+    });
     headerActions.appendChild(close);
     header.appendChild(headerActions);
     panel.appendChild(header);
@@ -581,9 +607,13 @@ export function createPanel(options: PanelOptions): Panel {
       statuses.delete(url);
       refresh(url);
     },
-    open() {
-      positionPanel();
-      panel.classList.add('open');
+    open,
+    async restoreIfDismissed() {
+      await prefsReady;
+      if (!dismissed && !pref.hidden) return false;
+      if (pref.hidden) await saveFabPref({ hidden: false });
+      open();
+      return true;
     },
     showStaleNotice() {
       // The i18n bundle is unreachable once the context is invalidated, so

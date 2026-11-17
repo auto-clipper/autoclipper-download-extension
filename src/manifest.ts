@@ -12,7 +12,7 @@ export default defineManifest({
   short_name: 'AutoClipper DL',
   description: '__MSG_extDescription__',
   default_locale: 'en',
-  version: '0.4.1',
+  version: '0.5.0',
   minimum_chrome_version: '111',
   homepage_url: 'https://autoclipper.live',
   icons: {
@@ -51,6 +51,12 @@ export default defineManifest({
       matches: AUTOCLIPPER_APP_MATCHES,
       js: ['src/content/autoclipper.ts'],
       run_at: 'document_idle',
+    },
+  ],
+  web_accessible_resources: [
+    {
+      resources: ['brand/*'],
+      matches: [...SOCIAL_MATCHES, ...REDDIT_MATCHES, ...YOUTUBE_MATCHES],
     },
   ],
   // contextMenus: "Download this video" on right-click (no install warning).

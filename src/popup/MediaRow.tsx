@@ -52,14 +52,14 @@ export function MediaRow({ item, statuses, onDownload }: MediaRowProps) {
       <Thumbnail item={item} />
       <div className="min-w-0 flex-1">
         <p className="line-clamp-2 text-xs leading-snug">{item.title || item.pageUrl}</p>
-        <p className="mt-0.5 text-[11px] text-[#8a93a3]">
+        <p className="mt-0.5 text-[11px] text-[#a4aea6]">
           {[providerName(item.provider), item.quality].filter(Boolean).join(' · ')}
         </p>
         <div className="mt-2 flex flex-wrap items-center gap-1.5">
           <button
             onClick={() => onDownload(selectedUrl, item.filename, meta)}
             disabled={status === 'downloading'}
-            className="cursor-pointer rounded-lg bg-[#bfff00] px-3 py-1.5 text-xs font-bold text-[#0b0d11] hover:brightness-110 disabled:cursor-default disabled:opacity-75"
+            className="cursor-pointer rounded-lg bg-[#b5ff00] px-3 py-1.5 text-xs font-bold text-[#0b100d] hover:brightness-110 disabled:cursor-default disabled:opacity-75"
           >
             {label(status, t('downloadVideo'))}
           </button>
@@ -69,7 +69,7 @@ export function MediaRow({ item, statuses, onDownload }: MediaRowProps) {
               value={selectedUrl}
               onChange={(e) => setSelectedUrl(e.target.value)}
               aria-label={t('qualityLabel')}
-              className="cursor-pointer rounded-lg border border-[#23262e] bg-[#1a1d24] px-2 py-1.5 text-xs font-semibold text-[#f4f7fb]"
+              className="cursor-pointer rounded-lg border border-[#262e29] bg-[#1b221e] px-2 py-1.5 text-xs font-semibold text-[#f3f5ea]"
             >
               {variants.map((v) => (
                 <option key={v.url} value={v.url}>
@@ -89,7 +89,7 @@ export function MediaRow({ item, statuses, onDownload }: MediaRowProps) {
                 })
               }
               disabled={audioStatus === 'downloading'}
-              className="cursor-pointer rounded-lg bg-[#23262e] px-3 py-1.5 text-xs font-bold hover:brightness-125 disabled:cursor-default disabled:opacity-75"
+              className="cursor-pointer rounded-lg bg-[#262e29] px-3 py-1.5 text-xs font-bold hover:brightness-125 disabled:cursor-default disabled:opacity-75"
             >
               {label(audioStatus, t('downloadAudio'))}
             </button>
@@ -100,7 +100,7 @@ export function MediaRow({ item, statuses, onDownload }: MediaRowProps) {
               href={sendToAppUrl(item.pageUrl, 'popup-item-send')}
               target="_blank"
               rel="noopener"
-              className="rounded-lg border border-[#00e5ff]/40 px-3 py-1.5 text-xs font-bold text-[#00e5ff] no-underline hover:bg-[#00e5ff]/10"
+              className="rounded-lg border border-[#b5ff00]/40 px-3 py-1.5 text-xs font-bold text-[#b5ff00] no-underline hover:bg-[#b5ff00]/10"
             >
               {t('sendToAutoclipperShort')}
             </a>

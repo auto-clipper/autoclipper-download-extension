@@ -52,7 +52,7 @@ const STYLES = `
   :host { all: initial; }
   .layer {
     position: fixed; inset: 0; z-index: 2147483645; pointer-events: none;
-    font-family: system-ui, -apple-system, sans-serif;
+    font-family: 'Blauer Nue', system-ui, sans-serif;
   }
   .pill {
     position: absolute; top: 0; left: 0; display: none; gap: 4px;
@@ -67,18 +67,18 @@ const STYLES = `
     transition: filter 0.12s ease, transform 0.12s ease;
   }
   button:hover, a:hover { filter: brightness(1.08); transform: translateY(-1px); }
-  .dl { padding: 0 12px 0 10px; background: #bfff00; color: #0b0d11; }
+  .dl { padding: 0 12px 0 10px; background: #b5ff00; color: #003b20; }
   .dl:disabled { cursor: default; transform: none; }
-  .dl.done { background: #0b0d11; color: #bfff00; border: 1px solid #bfff00; }
+  .dl.done { background: #0b100d; color: #b5ff00; border: 1px solid #b5ff00; }
   .dl.failed { background: #2e2326; color: #ff6b6b; }
   .send {
-    width: 32px; justify-content: center; background: rgba(11, 13, 17, 0.82);
-    color: #00e5ff; border: 1px solid rgba(0, 229, 255, 0.45);
+    width: 32px; justify-content: center; background: #0b100d;
+    color: #b5ff00; border: 1px solid rgba(181, 255, 0, 0.45);
   }
   svg { width: 16px; height: 16px; flex-shrink: 0; }
   .spinner {
     width: 12px; height: 12px; border-radius: 50%;
-    border: 2px solid rgba(11, 13, 17, 0.3); border-top-color: #0b0d11;
+    border: 2px solid rgba(0, 59, 32, 0.3); border-top-color: #003b20;
     animation: acdl-spin 0.7s linear infinite;
   }
   @keyframes acdl-spin { to { transform: rotate(360deg); } }

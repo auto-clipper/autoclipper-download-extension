@@ -1,4 +1,7 @@
 {
+  "popupTitle": {
+    "message": "Video Downloader"
+  },
   "extName": {
     "message": "AutoClipper Video Downloader — Instagram, TikTok, Reddit, X"
   },

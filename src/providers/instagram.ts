@@ -18,7 +18,7 @@ export const instagram: Provider = {
 
     let parsed: unknown;
     try {
-      parsed = JSON.parse(body);
+      parsed = JSON.parse(body.trimStart().replace(/^for \(;;\);/, ''));
     } catch {
       return [];
     }
@@ -49,7 +49,8 @@ export const instagram: Provider = {
       if (!url || seen.has(url)) return;
       seen.add(url);
 
-      const code = typeof obj.code === 'string' ? obj.code : undefined;
+      const shortcode = obj.code ?? obj.shortcode;
+      const code = typeof shortcode === 'string' ? shortcode : undefined;
       const id = code ?? (obj.pk ? String(obj.pk) : obj.id ? String(obj.id) : url.slice(-24));
       const caption =
         typeof obj.caption?.text === 'string'

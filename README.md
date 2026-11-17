@@ -9,7 +9,7 @@ Chrome (MV3) extension that downloads videos from **Instagram, TikTok, Reddit, X
 - **Right-click menu** — "Download this video — AutoClipper" on supported sites downloads the video under the cursor (else the one on screen); on YouTube watch pages, "Clip this video with AutoClipper" deep-links into the app.
 - **Keyboard shortcut** — `Alt+Shift+D` downloads the video under the pointer, else the one on screen (rebindable at `chrome://extensions/shortcuts`; the popup shows the current binding).
 - **Download all** — one button in the panel header and the popup downloads every listed video not yet saved.
-- **Movable floating button** — drag it anywhere; hide it per platform from the panel header (eye icon) and bring it back from the popup. Position/visibility are stored per platform in `chrome.storage.local` (`fabPrefs`).
+- **Movable floating button** — drag it anywhere. Close the panel with **×**, or use the eye icon to hide both the panel and button on that platform. Click the Chrome toolbar icon to restore the dismissed panel. The button’s position and visibility are stored per platform in `chrome.storage.local` (`fabPrefs`).
 - **Quality picker** — pick from every rendition the site exposes (Reddit permutations, X bitrates, Instagram versions, Twitch qualities).
 - **Reddit audio muxing** — separate DASH/CMAF video + audio tracks are fetched and muxed into one MP4 in an offscreen document (mp4box.js). Falls back to a video-only + separate-audio download if muxing fails.
 - **Send to AutoClipper** — videos from sources the app can import (YouTube, Instagram, Twitch — see `APP_IMPORTABLE_PROVIDERS`) link into the app at `/projects?video=<url>` to turn them into captioned clips. TikTok, X and Reddit get no Send button: the app rejects those links.
@@ -25,7 +25,7 @@ Landing page (GitHub Pages, served from `docs/`): https://auto-clipper.github.io
 
 ## How it works
 
-- A **MAIN-world interceptor** (`src/interceptor/`) observes `fetch`/XHR JSON responses on Instagram, TikTok and X — these sites only expose real MP4 URLs inside API payloads (the `<video>` tags use `blob:` URLs).
+- A **MAIN-world interceptor** (`src/interceptor/`) observes `fetch` and XHR responses on Instagram, TikTok and X. It buffers early media responses until the content script is listening and supports text and JSON-mode XHR. Instagram also reads prefetched media from the page’s JSON scripts.
 - **Providers** (`src/providers/`) are pure extractor functions that fish media descriptors out of those payloads. One module per site, unit-tested against fixtures in `tests/fixtures/`.
 - The **content script** (`src/content/`) merges detections, renders the floating panel (shadow DOM, closed root) and relays items to the background worker. Reddit is handled here by fetching the post's public `<permalink>.json`. TikTok's server-rendered first video is read from the `__UNIVERSAL_DATA_FOR_REHYDRATION__` script tag.
 - The **inline buttons** (`src/content/inline.ts`) float a Download / Send-to-AutoClipper pill over each visible video player while it is hovered. They live in their own fixed-position closed-shadow layer that tracks each player's bounding box (site players clip overflow and re-render their markup). Players are paired with detected items by `src/content/match.ts` — a pure matcher that looks for an item's media id / post path in the player's poster, its ancestors' ids/`permalink` attributes and the links inside its post, nearest first; single-video pages fall back to the id in the URL. Reddit anchors on the `shreddit-player` host (its `<video>` sits in a shadow root). Disabled via the `inlineButtons` flag in `chrome.storage.local` (popup toggle).
@@ -48,7 +48,7 @@ npm run dev        # Vite dev server with CRXJS HMR
 npm run build      # typecheck + production build into dist/
 npm test           # provider extractor unit tests (vitest)
 npm run lint       # eslint
-npm run icons      # regenerate public/icons/*.png from scripts/icon.svg (needs ImageMagick)
+npm run icons      # regenerate public/icons/*.png from scripts/autoclipper-logo.svg (needs ImageMagick)
 npm run zip        # build + zip for Chrome Web Store upload
 ```
 
@@ -64,7 +64,7 @@ Load in Chrome: `chrome://extensions` → enable Developer mode → "Load unpack
 - [ ] Hovering a video shows the on-video Download button; it downloads *that* video (check a feed with several videos on X, Reddit, Instagram and TikTok); it hides behind page modals and when the popup toggle is off
 - [ ] Right-click on a video → "Download this video — AutoClipper" downloads that video (Instagram/TikTok overlays included); on a YouTube watch page the menu offers "Clip this video with AutoClipper"
 - [ ] `Alt+Shift+D` over a video downloads it; away from videos it downloads the one on screen
-- [ ] Drag the floating button to another corner → the panel opens toward the page centre; hide it via the eye icon → bring it back from the popup
+- [ ] Drag the floating button to another corner → the panel opens toward the page centre; hide it via the eye icon → restore it from the Chrome toolbar
 - [ ] "Download all" downloads each listed video once
 - [ ] Popup mirrors the page's detected videos; badge shows the count
 - [ ] Both locales render (`chrome://settings/languages` → move pt-BR to top to test)

@@ -5,12 +5,12 @@ import { providerName } from '@/shared/labels';
 /** Thumbnail, or a platform-initials tile when there is none or it fails to load. */
 export function Thumbnail({ item }: { item: MediaItem }) {
   const [failed, setFailed] = useState(false);
-  const base = 'h-12 w-12 flex-shrink-0 rounded-lg bg-[#1a1d24]';
+  const base = 'h-12 w-12 flex-shrink-0 rounded-lg bg-[#1b221e]';
   if (!item.thumbnail || failed) {
     return (
       <span
         aria-hidden
-        className={`${base} flex items-center justify-center text-[11px] font-bold text-[#5c6470]`}
+        className={`${base} flex items-center justify-center text-[11px] font-bold text-[#8d9a90]`}
       >
         {providerName(item.provider).slice(0, 2)}
       </span>

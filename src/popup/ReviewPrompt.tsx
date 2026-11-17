@@ -29,22 +29,22 @@ export function ReviewPrompt() {
   };
 
   return (
-    <div className="m-3 rounded-xl border border-[#bfff00]/40 bg-gradient-to-br from-[#bfff00]/10 to-[#00e5ff]/10 p-3">
-      <p className="text-xs font-bold text-[#bfff00]">{t('reviewPromptTitle')}</p>
-      <p className="mt-1 text-[11px] leading-snug text-[#c5ccd6]">{t('reviewPromptBody')}</p>
+    <div className="m-3 rounded-xl border border-[#b5ff00]/40 bg-[#131915] p-3">
+      <p className="text-xs font-bold text-[#b5ff00]">{t('reviewPromptTitle')}</p>
+      <p className="mt-1 text-[11px] leading-snug text-[#d3dacf]">{t('reviewPromptBody')}</p>
       <div className="mt-2 flex gap-2">
         <a
           href={STORE_REVIEW_URL}
           target="_blank"
           rel="noopener"
           onClick={() => close('done')}
-          className="rounded-lg bg-[#bfff00] px-3 py-1.5 text-xs font-bold text-[#0b0d11] no-underline hover:brightness-110"
+          className="rounded-lg bg-[#b5ff00] px-3 py-1.5 text-xs font-bold text-[#0b100d] no-underline hover:brightness-110"
         >
           {t('reviewPromptRate')}
         </a>
         <button
           onClick={() => close('dismissed')}
-          className="cursor-pointer rounded-lg px-3 py-1.5 text-xs font-semibold text-[#8a93a3] hover:text-[#f4f7fb]"
+          className="cursor-pointer rounded-lg px-3 py-1.5 text-xs font-semibold text-[#a4aea6] hover:text-[#f3f5ea]"
         >
           {t('reviewPromptDismiss')}
         </button>
